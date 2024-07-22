@@ -4,34 +4,48 @@
 #include "util.h"
 
 
-#ifdef _WIN32
+#ifdef _WIN32 // @windows
 
+//#include <stdint.h>
+
+//------------> Windows DEFINES
+
+// Debug error messages
 #define ERROR_CODE_DOES_NOT_RECOGNIZE_DEVICE 22
 #define ERROR_CODE_CANNOT_FIND_DEVICE 2
 #define ERROR_CODE_ACCESS_DENIED 5
-#define READ_TIME_OUT_CONSTANT 5//ms
-#define WRITE_TIME_OUT_CONSTANT 1//ms
+
+// Timeout (ms)
+//#define READ_TIME_OUT_CONSTANT 100
+//#define WRITE_TIME_OUT_CONSTANT 100
 
 
-SSIZE_T read_port(HANDLE port, uint8_t* buffer, size_t size);
-int write_port(HANDLE port, uint8_t* buffer, size_t size);
-HANDLE open_serial_port(const char* device, uint32_t baud_rate, BOOL flushBuffers);
-void print_error(const char* context);
+//------------> Windows PROTOTYPES
+static void print_error(const char * context);
+HANDLE open_serial_port(const char * device, uint32_t baud_rate);
+int write_port(HANDLE port, uint8_t * buffer, size_t size);
+SSIZE_T read_port(HANDLE port, uint8_t * buffer, size_t size);
 
-#else
+#else // @linux
 
+//------------> Linux INCLUDES
+#include <fcntl.h>
+
+//------------> Linux DEFINES
+
+// Debug error messages
 #define ERROR_CODE_DOES_NOT_RECOGNIZE_DEVICE 13
 #define ERROR_CODE_CANNOT_FIND_DEVICE 2
 #define ERROR_CODE_ACCESS_DENIED 11
 #define INVALID_HANDLE_VALUE -1
 
-
-ssize_t read_port(int fd, uint8_t * buffer, size_t size);
+//------------> Linux PROTOTYPES
+int open_serial_port(const char * device, uint32_t baud_rate);
 int write_port(int fd, uint8_t * buffer, size_t size);
-int open_serial_port(const char * device, uint32_t baud_rate, BOOL flushData);
-
-#endif
-// linux and windows
+ssize_t read_port(int fd, uint8_t * buffer, size_t size);
 
 
 #endif
+
+#endif
+

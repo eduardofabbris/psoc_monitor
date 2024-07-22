@@ -169,6 +169,7 @@ int chooseSerialPort(SERIAL_PORT *device, int x, int y)
 //****************************************************************************************
 
 // return 1 if successful, or 0 if not
+// manage_com
 BOOL readProtocol(SERIAL_PORT *device, char *protocol, double timeout)
 {
     double dTime = 0;

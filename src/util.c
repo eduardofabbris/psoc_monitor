@@ -1,123 +1,151 @@
+/**
+ ******************************************************************************
+ * @file    util.h
+ * @date    21-July-2024
+ * @brief   Miscellaneous functions for PSoc Monitor
+ *
+ ******************************************************************************
+ */
 #include "include/util.h"
-#include <stdarg.h>
 
-// return the time elapsed in ms since startTime
-double _timeDiff(clock_t startTime)
+/**
+ * @brief  Time difference
+ * @param  start_t: initial time
+ * @retval The time elapsed in milliseconds since start_time
+ * @note
+ */
+double time_diff(clock_t start_t)
 {
-	return difftime(clock(), startTime);
+    return (((double) (clock() - start_t)) / CLOCKS_PER_SEC) / 1000;
 }
 //**************************************************************************************
 
-// source: https://www.w3resource.com/c-programming/time/c-asctime.php
-char *getCurrentTimeAndDate()
+/**
+ * @brief  Get time and date information
+ * @param  None
+ * @retval The system date and time as a string pointer
+ * @note   Source code: https://www.w3resource.com/c-programming/time/c-asctime.php
+ */
+char *get_timeinfo()
 {
-	static struct tm *new_time;
-	time_t lctime;
+    static struct tm *new_time;
+    time_t lctime;
 
-	// Get the time in seconds
-	time(&lctime);
+    // Get the time in seconds
+    time(&lctime);
 
-	// Convert it to the structure tm
-	new_time = localtime(&lctime);
+    // Convert it to the structure tm
+    new_time = localtime(&lctime);
 
-	return asctime(new_time);
+    return asctime(new_time);
 }
 //**************************************************************************************
 
-#ifdef _WIN32
-void gotoxy(int y, int x)
-{ 
-	COORD coord = {0, 0}; // position cursor
-	coord.X = x;
-	coord.Y = y;
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-}
-//****************************************************************************************
+#ifdef _WIN32 // @windows
 
-void showCursor(BOOL condition)
-{ // hide or show cursor
-	if (condition == FALSE)
-	{
-		CONSOLE_CURSOR_INFO cursor = {1, FALSE};
-		SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursor);
-	}
-	else
-	{
-		CONSOLE_CURSOR_INFO cursor = {1, TRUE};
-		SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursor);
-	}
-}
-//****************************************************************************************
-
-#else // linux -> uses ncurses
-
-void gotoxy(int y, int x)
+/**
+ * @brief  Move terminal cursor
+ * @param  x: line number
+ * @param  y: column number
+ */
+void gotoxy(int x, int y)
 {
-	move(y, x);
+    COORD coord = {0, 0};
+    coord.X = x;
+    coord.Y = y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 //****************************************************************************************
 
-void showCursor(BOOL condition)
+/**
+ * @brief  Hide terminal cursor
+ * @param  State: disable or enable
+ */
+void hide_cursor(int state)
 {
-	if (condition)
-		curs_set(1); // show
-	else
-		curs_set(0); // hide
+    CONSOLE_CURSOR_INFO cursor = {1, !state};
+    SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursor);
 }
 //****************************************************************************************
 
-int kbhit(void)
+#else // @linux
+
+/**
+ * @brief  Move terminal cursor
+ * @param  x: line number
+ * @param  y: column number
+ */
+void gotoxy(int x, int y)
 {
-	int ch = getch();
-
-	if (ch != ERR)
-	{
-		ungetch(ch);
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
+    printf("\033[%d;%dH",y, x);
 }
 //****************************************************************************************
 
+/**
+ * @brief  Hide terminal cursor
+ * @param  State: disable or enable
+ */
+void hide_cursor(int state)
+{
+    if (state)
+    {
+        printf("\e[?25l");
+    }
+    else
+    {
+        printf("\e[?25h");
+    }
+
+}
+//****************************************************************************************
+
+/**
+ * @brief  Verify keyboard input
+ * @param  None
+ * @retval True if a key was pressed or false otherwise
+ */
+int kbhit()
+{
+    struct timeval tv;
+    fd_set fds;
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
+    select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
+    return FD_ISSET(STDIN_FILENO, &fds);
+}
+//****************************************************************************************
+
+/**
+ * @brief  Set non-blocking terminal input and disable echo mode
+ * @param  state: enable or disable
+ * @retval The system date and time as a string pointer
+ * @note   Canonical mode: waits until ENTER is pressed to take input
+ *         Echo mode     : prints all typed input
+ */
+void set_nonblock(int state)
+{
+    struct termios ttystate;
+
+    //get the terminal state
+    tcgetattr(STDIN_FILENO, &ttystate);
+
+    if (state)
+    {
+        //turn off canonical and echo mode
+        ttystate.c_lflag &= ~(ICANON | ECHO);
+        //minimum of number input read.
+        ttystate.c_cc[VMIN] = 1;
+    }
+    else
+    {
+        //turn on canonical and echo mode
+        ttystate.c_lflag |= (ICANON | ECHO);
+    }
+    //set the terminal attributes.
+    tcsetattr(STDIN_FILENO, TCSANOW, &ttystate);
+
+}
+//****************************************************************************************
 #endif
-
-void printPrompt(char *message, int x, int y)
-{
-	gotoxy(x, y);
-	_printf("%s", message);
-	refresh();
-	clrbuf();
-}
-//****************************************************************************************
-
-void clear_write(int clear_size, int x, int y)
-{
-	gotoxy(x, y);
-	for(int i = 0; i < clear_size; i++) _printf(" ");
-	refresh();
-	gotoxy(x, y);
-}
-//****************************************************************************************
-
-void _printf(const char *format, ...)
-{
-
-	va_list args; // points to each unnamed arg in turn
-	char buffer[BUFSIZ];
-
-	va_start(args, format); // make ap point to 1st unnamed arg
-
-	vsnprintf(buffer, sizeof buffer, format, args);
-
-#ifdef _WIN32
-	printf("%s", buffer);
-#else
-	printw("%s", buffer); // uses ncurses lib
-	refresh();
-#endif
-
-	va_end(args);
-}
