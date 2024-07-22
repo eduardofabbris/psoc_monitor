@@ -3,6 +3,8 @@
 
 #include "util.h"
 
+//------------> DEFINES
+#define DEBUG_SERIAL_EN 0
 
 #ifdef _WIN32 // @windows
 

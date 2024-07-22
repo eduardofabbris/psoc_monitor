@@ -45,7 +45,7 @@ char *get_timeinfo()
 
 /**
  * @brief  Move terminal cursor
- * @param  x: line number
+ * @param  x: row number
  * @param  y: column number
  */
 void gotoxy(int x, int y)
@@ -72,12 +72,12 @@ void hide_cursor(int state)
 
 /**
  * @brief  Move terminal cursor
- * @param  x: line number
+ * @param  x: row number
  * @param  y: column number
  */
 void gotoxy(int x, int y)
 {
-    printf("\033[%d;%dH",y, x);
+    printf("\033[%d;%dH",x, y);
 }
 //****************************************************************************************
 

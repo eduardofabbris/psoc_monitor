@@ -4,9 +4,16 @@
 
 #ifndef _WIN32 // @linux
 
-void perror(const char *msg)
+static void print_error(const char *msg)
 {
+  if (DEBUG_SERIAL_EN)
+  {
+   printf("%s", msg); 
+  }
+  else
+  {
     (void) msg;
+  }
 }
 
 // Opens the specified serial port, sets it up for binary communication,
@@ -17,7 +24,7 @@ int open_serial_port(const char * device, uint32_t baud_rate)
   int fd = open(device, O_RDWR | O_NOCTTY);
   if (fd == -1)
   {
-    perror(device);
+    print_error(device);
     return -1;
   }
 
@@ -25,7 +32,7 @@ int open_serial_port(const char * device, uint32_t baud_rate)
   int result = tcflush(fd, TCIOFLUSH);
   if (result)
   {
-    perror("tcflush failed");  // just a warning, not a fatal error
+    print_error("tcflush failed");  // just a warning, not a fatal error
   }
 
   // Get the current configuration of the serial port.
@@ -33,7 +40,7 @@ int open_serial_port(const char * device, uint32_t baud_rate)
   result = tcgetattr(fd, &options);
   if (result)
   {
-    perror("tcgetattr failed");
+    print_error("tcgetattr failed");
     close(fd);
     return -1;
   }
@@ -69,7 +76,7 @@ int open_serial_port(const char * device, uint32_t baud_rate)
   result = tcsetattr(fd, TCSANOW, &options);
   if (result)
   {
-    perror("tcsetattr failed");
+    print_error("tcsetattr failed");
     close(fd);
     return -1;
   }
@@ -83,7 +90,7 @@ int write_port(int fd, uint8_t * buffer, size_t size)
   ssize_t result = write(fd, buffer, size);
   if (result != (ssize_t)size)
   {
-    perror("failed to write to port");
+    print_error("failed to write to port");
     return -1;
   }
   return 0;
@@ -102,7 +109,7 @@ ssize_t read_port(int fd, uint8_t * buffer, size_t size)
     ssize_t r = read(fd, buffer + received, size - received);
     if (r < 0)
     {
-      perror("failed to read from port");
+      print_error("failed to read from port");
       return -1;
     }
     if (r == 0)

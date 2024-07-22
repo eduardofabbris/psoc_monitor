@@ -53,13 +53,15 @@ void hide_cursor(int state);
 #define msleep(a) for(int ii = 0; ii < 1000; ii++) {usleep(a);}
 #define clrscr() printf("\e[1;1H\e[2J")
 
+//------------> Linux TYPEDEFS
+typedef uint8_t BOOL;
+typedef int HANDLE;
+
 //------------> Linux PROTOTYPES
 int kbhit();
 void set_nonblock(int state);
 
 
-typedef uint8_t BOOL;
-typedef int HANDLE;
 #define clrbuf() __fpurge(stdin)
 #define _NULL 0
 #endif

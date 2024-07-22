@@ -14,8 +14,14 @@ static void print_error(const char * context)
     NULL, error_code, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
     buffer, sizeof(buffer), NULL);
   if (size == 0) { buffer[0] = 0; }
-  // fprintf(stderr, "%s: %s\n", context, buffer);
-  (void) context;
+  if (DEBUG_SERIAL_EN)
+  {
+    fprintf(stderr, "%s: %s\n", context, buffer);
+  }
+  else
+  {
+    (void) context;
+  }
 }
 
 // Opens the specified serial port, configures its timeouts, and sets its
