@@ -11,7 +11,7 @@ extern const char *main_menu_template;
 void init_terminal()
 {
     if(WINDOWS_EN)
-    { 
+    {
         system("MODE con cols=80 lines=22");
         system("if not exist \"temp\" mkdir \"temp\"");
         system("if not exist \"log\" mkdir \"log\"");
@@ -33,7 +33,7 @@ int main(){
     init_terminal();
     //char *arrow = "->";
 
-    //BUFFER_DATA bufferPSoc;    
+    //BUFFER_DATA bufferPSoc;
     //SERIAL_PORT mainDevice, monitorDevice;
     //
     //
@@ -42,8 +42,8 @@ int main(){
     //SERIAL_PORT_Init(&monitorDevice, monitor_device_type);
 
     //memset(bufferPSoc.data, 0, sizeof(bufferPSoc.data));
-    //bufferPSoc.dataIndex = 
-    //bufferPSoc.SRfaultIndex = 
+    //bufferPSoc.dataIndex =
+    //bufferPSoc.SRfaultIndex =
     //bufferPSoc.WRfaultIndex = 0;
     //
 
@@ -55,41 +55,13 @@ int main(){
     //if(monitorDevice.active) close_serial_port(monitorDevice.ptr);
     //showCursor(TRUE);
 
+
+
     int menu_option = 0;
-    char *arrow_ptr = input_layer + TERM_N_COL*ARROW_ROW_OFFSET + ARROW_COL_OFFSET;
-    memcpy(arrow_ptr, "->", 2);
-   
-
-    int ch = 0;
-    while(ch != ESC && ch != 'q') {
-        if(kbhit()){
-            // read last character in case ANSI escape sequences
-            while(read(STDIN_FILENO, &ch, 1) > 0);
-
-            //gotoxy(1,1), printf("Read character: %c", ch);
-            switch(ch)
-            {
-                case 'w': case 'k': case UP:
-                    if (menu_option > 0 ) menu_option -= 1;
-                    else menu_option = MENU_N_OPTIONS - 1;
-
-                    break;
-                case 's': case 'j': case DOWN:
-                    if (menu_option < MENU_N_OPTIONS - 1) menu_option += 1;
-                    else menu_option = 0;
-                    break;
-                case ENTER:
-                    gotoxy(2,1), printf("Option %d", menu_option);
-                    break;
-                default:
-                    break;
-            }
-            arrow_ptr = input_layer + TERM_N_COL*(ARROW_ROW_OFFSET + menu_option) + ARROW_COL_OFFSET;
-
-        }
+    while(menu_option != MENU_N_OPTIONS - 1) {
+        menu_option = get_menu_option(input_layer);
         //system("clear");
         //clrscr();
-        memcpy(arrow_ptr, "->", 2);
         update_screen(main_menu_template, input_layer);
         msleep(10);
     }
@@ -106,7 +78,7 @@ int main(){
     //    //endwin();
     //#endif
     //clrscr();
-    
+
     return 0;
 }
 

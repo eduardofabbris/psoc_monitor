@@ -82,6 +82,12 @@ const char *serial_menu_template[] =
 };
 //****************************************************************************************
 
+/**
+ * @brief  Clear screen and print a new one
+ * @param  background: screen template to print as background
+ * @param  input_layer: screen layer to print over the background
+ * @retval None
+ */
 void update_screen(const char *background, char *input_layer)
 {
     char bck_ch, input_ch;
@@ -102,6 +108,54 @@ void update_screen(const char *background, char *input_layer)
             }
         }
     }
+    // force terminal output update
     fflush(stdout);
+    // clear input layer
     memset(input_layer, '\0', TERM_N_ROW*TERM_N_COL);
 }
+//****************************************************************************************
+
+/**
+ * @brief  Handle arrow movement and get main menu chosen option
+ * @param  input_layer: screen layer to print over the background
+ * @retval The option selected or -1 otherwise
+ */
+int get_menu_option(char *input_layer)
+{
+    static int menu_option = 0;
+    // Set arrow position
+    char *arrow_ptr = input_layer + TERM_N_COL*(ARROW_ROW_OFFSET + menu_option) + ARROW_COL_OFFSET;
+
+    int ch = 0;
+    if(kbhit()){
+        // read last character in case ANSI escape sequences
+        while(read(STDIN_FILENO, &ch, 1) > 0);
+
+        switch(ch)
+        {
+            case 'w': case 'k': case UP:
+                if (menu_option > 0 ) menu_option -= 1;
+                else menu_option = MENU_N_OPTIONS - 1;
+
+                break;
+            case 's': case 'j': case DOWN:
+                if (menu_option < MENU_N_OPTIONS - 1) menu_option += 1;
+                else menu_option = 0;
+
+                break;
+            case 'q': case ESC:
+                // Considering the last option is exit
+                return MENU_N_OPTIONS - 1;
+            case ENTER:
+                return menu_option;
+            default:
+                break;
+        }
+        // Update arrow position
+        arrow_ptr = input_layer + TERM_N_COL*(ARROW_ROW_OFFSET + menu_option) + ARROW_COL_OFFSET;
+    }
+
+    memcpy(arrow_ptr, "->", 2);
+    return -1;
+}
+//****************************************************************************************
