@@ -77,7 +77,7 @@ void hide_cursor(int state)
  */
 void gotoxy(int x, int y)
 {
-    printf("\033[%d;%dH",x, y);
+    printf("\033[%d;%dH",x+1, y+1);
 }
 //****************************************************************************************
 
@@ -128,22 +128,26 @@ void set_nonblock(int state)
 {
     struct termios ttystate;
 
-    //get the terminal state
+    // get the terminal state
     tcgetattr(STDIN_FILENO, &ttystate);
 
     if (state)
     {
-        //turn off canonical and echo mode
+        // turn off canonical and echo mode
         ttystate.c_lflag &= ~(ICANON | ECHO);
-        //minimum of number input read.
-        ttystate.c_cc[VMIN] = 1;
     }
     else
     {
-        //turn on canonical and echo mode
+        // turn on canonical and echo mode
         ttystate.c_lflag |= (ICANON | ECHO);
     }
-    //set the terminal attributes.
+
+    // minimum of number input read.
+    ttystate.c_cc[VMIN] = 0;
+    // timeout in deciseconds
+    ttystate.c_cc[VTIME] = 0;
+
+    // set the terminal attributes.
     tcsetattr(STDIN_FILENO, TCSANOW, &ttystate);
 
 }
