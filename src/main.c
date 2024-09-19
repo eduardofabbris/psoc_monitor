@@ -3,6 +3,13 @@
 //#include "include/serial.h"
 //#include "include/fileManagement.h"
 
+// buffer_info struct -> add CRC
+// File descriptor
+// file_name
+// file_cnt
+// irst_cnt     // internal reset counter
+// erst_cnt     // external reset counter
+// buffer_cnt   // number of buffers in file
 
 //=========== GLOBAL VARIABLES ===========
 
@@ -57,9 +64,11 @@ int main(){
 
 
 
+    // manage main menu
     int menu_option = 0;
     while(menu_option != MENU_N_OPTIONS - 1) {
         menu_option = get_menu_option(input_layer);
+
         //system("clear");
         //clrscr();
         update_screen(main_menu_template, input_layer);

@@ -70,6 +70,20 @@ void hide_cursor(int state)
 
 #else // @linux
 
+///**
+// * @brief  Read the keyboard input  
+// * @retval True if a key was pressed or false otherwise
+// */
+//char get_keyboard(void)
+//{
+//    int input_ch = 0;
+//
+//    // read last character in case ANSI escape sequences
+//    while(read(STDIN_FILENO, &input_ch, 1) > 0);
+//    return (char) input_ch;
+//}
+//****************************************************************************************
+
 /**
  * @brief  Move terminal cursor
  * @param  x: row number
