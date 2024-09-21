@@ -56,6 +56,7 @@ void hide_cursor(int state);
 #include <unistd.h>
 #include <termios.h>
 #include <sys/select.h>
+//#include <stdio_ext.h> // Add __fpurge
 
 //------------> Linux DEFINES
 #define FILE_SEPARATOR "/"
