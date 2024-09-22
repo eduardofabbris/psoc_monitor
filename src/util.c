@@ -31,7 +31,7 @@ char *get_timeinfo()
     static struct tm *new_time;
     time_t lctime;
 
-    // Get the time in seconds
+    // Get the timestamp in seconds
     time(&lctime);
 
     // Convert it to the structure tm

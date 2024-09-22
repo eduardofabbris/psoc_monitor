@@ -35,7 +35,7 @@ void hide_cursor(int state);
 
 #define clrbuf() fflush(stdin)
 #define close_serial_port(a) CloseHandle(a)
-#define _NULL NULL
+//#define _NULL NULL
 
 // Special ASCII keys
 #define UP 72
@@ -56,13 +56,14 @@ void hide_cursor(int state);
 #include <unistd.h>
 #include <termios.h>
 #include <sys/select.h>
-//#include <stdio_ext.h> // Add __fpurge
+#include <stdio_ext.h> // Add __fpurge
 
 //------------> Linux DEFINES
 #define FILE_SEPARATOR "/"
 #define msleep(a) for(int ii = 0; ii < 1000; ii++) {usleep(a);}
 //#define clrscr() printf("\e[1;1H\e[2J")
 //#define clrscr() printf("\033[2J")
+#define close_serial_port(a) close(a)
 #define clrscr() system("clear") 
 
 // Special ASCII keys
@@ -84,7 +85,7 @@ void set_nonblock(int state);
 
 
 #define clrbuf() __fpurge(stdin)
-#define _NULL 0
+//#define _NULL 0
 #endif
 
 #endif

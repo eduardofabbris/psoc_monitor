@@ -219,11 +219,14 @@ int get_menu_option(char *input_layer)
     memcpy(arrow_ptr, "->", 2);
     return -1;
 }
+//****************************************************************************************
 
 /**
- * @brief  Get user string input
+ * @brief  Get user string input from keyboard
  * @param  input_layer: screen layer to print over the background
- * @retval 1 when input confirmed, 0 when input canceled and -1 otherwise
+ * @param  str_buffer: buffer to store the input string
+ * @param  max_str_len: maximum input string length 
+ * @retval string length when input confirmed, -1 when input canceled and -2 otherwise
  */
 int get_keyboard_str(char *input_layer, char *str_buffer, int max_str_len)
 {
@@ -239,13 +242,13 @@ int get_keyboard_str(char *input_layer, char *str_buffer, int max_str_len)
             // Cancel input
             case ESC:
                 str_len = 0;
-                // Considering the last option is exit
-                return 0;
+                return -1;
 
             // Finished typing
             case ENTER:
+                int aux = str_len;
                 str_len = 0;
-                return 1;
+                return aux;
 
             // Erase character
             case BACKSPACE:
@@ -265,8 +268,9 @@ int get_keyboard_str(char *input_layer, char *str_buffer, int max_str_len)
     }
 
     memcpy(input_layer, str_buffer, str_len);
+    // TODO: add blink animation
     memcpy(input_layer + str_len, "_", 1);
-    return -1;
+    return -2;
 }
 //****************************************************************************************
 

@@ -8,7 +8,10 @@ static void print_error(const char *msg)
 {
   if (DEBUG_SERIAL_EN)
   {
-   printf("%s", msg); 
+    printf("%s", msg); 
+    fflush(stdout);
+    char dummy_ch;
+    while(!read(STDIN_FILENO, &dummy_ch, 1));
   }
   else
   {
@@ -16,10 +19,35 @@ static void print_error(const char *msg)
   }
 }
 
+// Replace '/' character with "//" and calls _open_serial_port
+int open_serial_port(char * port_name, int name_len, uint32_t baud_rate)
+{
+    char name_buf[100] = {0};
+    int j = 0;
+
+    for (int i = 0; i < name_len; i++)
+    {
+        if ( port_name[i] == '/' )
+        {
+            name_buf[j]   = port_name[i];
+            name_buf[j+1] = port_name[i];
+            j += 2;
+
+        }
+        else
+        {
+            name_buf[j] = port_name[i];
+            j++;
+        }
+
+    }
+    return _open_serial_port(name_buf, baud_rate);
+}
+
 // Opens the specified serial port, sets it up for binary communication,
 // configures its read timeouts, and sets its baud rate.
 // Returns a non-negative file descriptor on success, or -1 on failure.
-int open_serial_port(const char * device, uint32_t baud_rate)
+int _open_serial_port(const char * device, uint32_t baud_rate)
 {
   int fd = open(device, O_RDWR | O_NOCTTY);
   if (fd == -1)
@@ -66,8 +94,7 @@ int open_serial_port(const char * device, uint32_t baud_rate)
   case 38400:  cfsetospeed(&options, B38400);  break;
   case 115200: cfsetospeed(&options, B115200); break;
   default:
-    fprintf(stderr, "warning: baud rate %u is not supported, using 9600.\n",
-      baud_rate);
+    print_error("warning: baud rate is not supported, using 9600.");
     cfsetospeed(&options, B9600);
     break;
   }
