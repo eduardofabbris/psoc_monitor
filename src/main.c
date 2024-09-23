@@ -12,14 +12,20 @@
 // erst_cnt     // external reset counter
 // buffer_cnt   // number of buffers in file
 
+int manage_monitor_menu();
 //=========== GLOBAL VARIABLES ===========
 
 extern char *main_menu_template;
+extern char *monitor_ascii_art[];
+extern char *monitor_menu_template;
 extern char *prompt_menu_template;
-const char *connected_status_template        =  "Connected";
-const char *attempting_status_template       =  "Attempting connection...";
-const char *error_status_template            =  "Error connecting to port!";
-const char *lost_connection_status_template  =  "Lost connection...";
+const char *connected_status_template       =  "Connected";
+const char *error_status_template           =  "Error connecting to port!";
+const char *exit_prompt_template            =  "Are you sure you want to Exit?";
+//const char *progress_prompt_template        =  "In progress";
+const char *progrss_spinner_template        = "|/-\\";
+//const char *attempting_status_template       =  "Attempting connection...";
+//const char *lost_connection_status_template  =  "Lost connection...";
 
 void init_terminal()
 {
@@ -85,7 +91,8 @@ int main(){
          *status_prompt = NULL;
 
     // Manage Main Menu
-    while(menu_option != MENU_N_OPTIONS - 1) {
+    while(menu_option != MENU_N_OPTIONS - 1)
+    {
         switch (fsm_st)
         {
             // Listen to menu option
@@ -99,7 +106,7 @@ int main(){
                     // Reset variables
                     memset(psoc_port.name, '\0', sizeof(psoc_port.name));
                     memset(monitor_port.name, '\0', sizeof(monitor_port.name));
-                    status_prompt = NULL; 
+                    status_prompt = NULL;
                     fsm_st = FSM_GET_PSOC_PORT_ST;
                 }
                 else
@@ -133,7 +140,8 @@ int main(){
                     if (psoc_port.device > 0)
                     {
                         // Verify device
-                        status_prompt = NULL; 
+                        // TODO: listen to port and change active status
+                        status_prompt = NULL;
                         fsm_st = FSM_GET_MONITOR_DEVICE_PORT_ST;
 
                     }
@@ -154,6 +162,7 @@ int main(){
                 // Print selected port
                 memcpy(input_layer + PSOC_PROMPT_OFFSET, psoc_port.name, psoc_port.name_len);
 
+                // TODO: check active status
                 // Print status
                 temp = strlen(connected_status_template);
                 memcpy(input_layer + TERM_N_COL*(PSOC_PROMPT_ROW_OFFSET + 1) - 5 - temp, connected_status_template, temp);
@@ -161,13 +170,13 @@ int main(){
                 if (status_prompt != NULL)
                 {
                     temp = strlen(status_prompt);
-                    memcpy(input_layer + TERM_N_COL*(MONITOR_PROMPT_ROW_OFFSET+1) - 5 - temp, status_prompt, temp);
+                    memcpy(input_layer + TERM_N_COL*(MONITOR_PROMPT_ROW_OFFSET + 1) - 5 - temp, status_prompt, temp);
                 }
 
                 // Cancel
                 if (str_len == -1)
                 {
-                    // Close open ports 
+                    // Close open ports
                     close(psoc_port.device);
 
                     fsm_st = FSM_IDLE_ST;
@@ -183,6 +192,7 @@ int main(){
                     if (monitor_port.device > 0)
                     {
                         // Verify device
+                        // TODO: listen to port and change active status
                         fsm_st = FSM_GET_LOG_INFO_ST;
 
                     }
@@ -212,7 +222,7 @@ int main(){
                 // Cancel
                 if (str_len == -1)
                 {
-                    // Close open ports 
+                    // Close open ports
                     close(psoc_port.device);
                     close(monitor_port.device);
 
@@ -222,6 +232,10 @@ int main(){
                 else if (str_len >= 0)
                 {
                     // Copy port info and check port
+                    // TODO:create new log file
+                    // Monitoring management
+                    manage_monitor_menu();
+                    fsm_st = FSM_IDLE_ST;
 
                 }
 
@@ -234,7 +248,7 @@ int main(){
 
 		if (background != NULL)
 		{
-			update_screen(background, input_layer);
+			update_screen(background, input_layer, NULL);
 			msleep(10);
 		}
     }
@@ -255,6 +269,111 @@ int main(){
     return 0;
 }
 
+//int monitoring_management(serial_port_t *psoc_port, serial_port_t *monitor_port)
+int manage_monitor_menu()
+{
+    char input_layer[TERM_N_ROW*TERM_N_COL] = {0};
+    char user_input = 0;
+
+    enum monitor_menu_st {
+            FSM_IDLE_ST,
+            FSM_TOGGLE_DEBUG_ST,
+            FSM_EXIT_PROMT_ST
+        };
+
+    clock_t spinner_timer = 0;
+    int spinner_cnt = 0, temp;
+    int fsm_st = FSM_IDLE_ST,
+        exit_flag = 0,
+        debug_flag = 0;
+    char *status_prompt = NULL;
+
+    //
+    while(!exit_flag)
+    {
+
+        // TODO: create listen function
+        if(kbhit())
+        {
+            // read last character in case ANSI escape sequences
+            while(read(STDIN_FILENO, &user_input, 1) > 0){}
+
+			switch (fsm_st)
+			{
+				// Listen to menu option
+				case FSM_IDLE_ST:
+                    exit_flag = 0;
+
+                    //status_prompt = (char *) progress_prompt_template;
+
+                    if (user_input == ESC)
+                    {
+                        status_prompt = (char *) exit_prompt_template;
+                        fsm_st = FSM_EXIT_PROMT_ST;
+                    }
+                    else if (user_input == 'D')
+                    {
+                        fsm_st = FSM_EXIT_PROMT_ST;
+                    }
+
+					break;
+
+                // Toggle debug mode
+                case FSM_TOGGLE_DEBUG_ST:
+
+                    if (user_input == 'M')
+                    {
+                        debug_flag = !debug_flag;
+                    }
+                    fsm_st = FSM_IDLE_ST;
+
+                    break;
+
+                // Exit prompt
+                case FSM_EXIT_PROMT_ST:
+
+                    if (user_input == ENTER)
+                    {
+                        exit_flag = 1;
+                    }
+                    else
+                    {
+                        status_prompt = NULL;
+                        fsm_st = FSM_IDLE_ST;
+                    }
+
+                    break;
+
+				default:
+					fsm_st = FSM_IDLE_ST;
+					break;
+
+			}
+        }
+
+        // Change defualt prompt
+        if (status_prompt != NULL)
+        {
+            temp = strlen(status_prompt);
+            memcpy(input_layer + STATUS_PROMPT_OFFSET , status_prompt, temp);
+        }
+        // Update spinner animation
+        else
+        {
+            input_layer[STATUS_PROMPT_OFFSET + DEFAULT_STATUS_PROMPT_LEN + 1] = progrss_spinner_template[spinner_cnt];
+            if ( time_diff(spinner_timer) >= 100)
+            {
+                spinner_cnt = spinner_cnt < SPINNER_ANIMATION_LEN ? spinner_cnt + 1 : 0;
+                spinner_timer = get_clock();
+            }
+        }
+
+
+        update_screen(monitor_menu_template, input_layer, monitor_ascii_art);
+        msleep(10);
+    }
+    return 0;
+}
 
 
 //**************************************************************************************

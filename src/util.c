@@ -9,14 +9,15 @@
 #include "include/util.h"
 
 /**
- * @brief  Time difference
+ * @brief  Computes the time difference
  * @param  start_t: initial time
  * @retval The time elapsed in milliseconds since start_time
- * @note
+ * @note   clock() doesn't measure wall-clock time, i.e. can't be used with msleep in linux
  */
 double time_diff(clock_t start_t)
 {
-    return (((double) (clock() - start_t)) / CLOCKS_PER_SEC) / 1000;
+    //return (((double) (get_clock() - start_t)) / (1 + (CLOCKS_PER_SEC - 1)*WINDOWS_EN)) / 1000;
+    return ((double) (get_clock() - start_t)) / 1000;
 }
 //**************************************************************************************
 
@@ -44,6 +45,17 @@ char *get_timeinfo()
 #ifdef _WIN32 // @windows
 
 /**
+ * @brief  Get time in microseconds
+ * @retval The CPU time in microseconds
+ */
+long int get_clock()
+{
+    return (long int) ((double)(clock()) / CLOCKS_PER_SEC / 1000000);
+}
+//**************************************************************************************
+
+
+/**
  * @brief  Move terminal cursor
  * @param  x: row number
  * @param  y: column number
@@ -69,6 +81,18 @@ void hide_cursor(int state)
 //****************************************************************************************
 
 #else // @linux
+
+/**
+ * @brief  Get time in microseconds
+ * @retval The wall-clock time in microseconds
+ */
+long int get_clock()
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return (long int) ((ts.tv_sec * 1000000LL) + (ts.tv_nsec / 1000));
+}
+//**************************************************************************************
 
 /**
  * @brief  Move terminal cursor

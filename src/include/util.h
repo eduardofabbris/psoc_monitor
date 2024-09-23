@@ -17,6 +17,7 @@
 #define ESC 27
 
 //------------> PROTOTYPES
+long int get_clock();
 double time_diff(clock_t start_t);
 char *get_timeinfo();
 void gotoxy(int x, int y);
@@ -64,7 +65,7 @@ void hide_cursor(int state);
 //#define clrscr() printf("\e[1;1H\e[2J")
 //#define clrscr() printf("\033[2J")
 #define close_serial_port(a) close(a)
-#define clrscr() system("clear") 
+#define clrscr() system("clear")
 
 // Special ASCII keys
 #define UP 65

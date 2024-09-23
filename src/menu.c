@@ -67,25 +67,44 @@ const char *prompt_menu_template =
 +-----------------------------------------------------------------------------------+\
 "};
 
+const char *monitor_ascii_art[] = {
+"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+"⠀⠀⠀⣸⣏⠛⠻⠿⣿⣶⣤⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+"⠀⠀⠀⣿⣿⣿⣷⣦⣤⣈⠙⠛⠿⣿⣷⣶⣤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+"⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣶⣦⣄⣈⠙⠻⠿⣿⣷⣶⣤⣀⡀⠀⠀⠀⠀⠀",
+"⠀⠀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣦⣄⡉⠛⠻⢿⣿⣷⣶⣤⣀⠀",
+"⠀⠀⠀⠉⠙⠛⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣾⢻⣍⡉⠉⣿⠇",
+"⠀⠀⠀⠀⠀⠀⠀⢹⡏⢹⣿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇⣰⣿⣿⣾⠏⠀",
+"⠀⠀⠀⠀⠀⠀⠀⠘⣿⠈⣿⠸⣯⠉⠛⠿⢿⣿⣿⣿⣿⡏⠀⠻⠿⣿⠇⠀⠀",
+"⠀⠀⠀⠀⠀⠀⠀⠀⢿⡆⢻⡄⣿⡀⠀⠀⠀⠈⠙⠛⠿⠿⠿⠿⠛⠋⠀⠀⠀",
+"⠀⠀⠀⠀⠀⠀⠀⠀⢸⣧⠘⣇⢸⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+"⠀⠀⠀⠀⠀⠀⠀⣀⣀⣿⣴⣿⢾⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+"⠀⠀⣴⡶⠾⠟⠛⠋⢹⡏⠀⢹⡇⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+"⠀⢠⣿⠀⠀⠀⠀⢀⣈⣿⣶⠿⠿⠛⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+"⠀⢸⣿⣴⠶⠞⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+"⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+"\0",
+};
+
 const char *monitor_menu_template =
 {"\
 +-----------------------------------------------------------------------------------+\
-|   ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀                                                  |\
-|   ⠀⠀⠀⣸⣏⠛⠻⠿⣿⣶⣤⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀             P S o C  6   M o n i t o r           |\
-|   ⠀⠀⠀⣿⣿⣿⣷⣦⣤⣈⠙⠛⠿⣿⣷⣶⣤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀                                                  |\
-|   ⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣶⣦⣄⣈⠙⠻⠿⣿⣷⣶⣤⣀⡀⠀⠀⠀⠀⠀⠀    Device Status                                 |\
-|   ⠀⠀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣦⣄⡉⠛⠻⢿⣿⣷⣶⣤⣀⠀⠀                                                  |\
-|   ⠀⠀⠀⠉⠙⠛⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣾⢻⣍⡉⠉⣿⠇⠀        - PSoc 6:                                 |\
-|   ⠀⠀⠀⠀⠀⠀⠀⢹⡏⢹⣿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇⣰⣿⣿⣾⠏⠀⠀        - Watchdog:                               |\
-|   ⠀⠀⠀⠀⠀⠀⠀⠘⣿⠈⣿⠸⣯⠉⠛⠿⢿⣿⣿⣿⣿⡏⠀⠻⠿⣿⠇⠀⠀⠀                                                  |\
-|   ⠀⠀⠀⠀⠀⠀⠀⠀⢿⡆⢻⡄⣿⡀⠀⠀⠀⠈⠙⠛⠿⠿⠿⠿⠛⠋⠀⠀⠀⠀    Info                                          |\
-|   ⠀⠀⠀⠀⠀⠀⠀⠀⢸⣧⠘⣇⢸⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀                                                  |\
-|   ⠀⠀⠀⠀⠀⠀⠀⣀⣀⣿⣴⣿⢾⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀        - Errors:                                 |\
-|   ⠀⠀⣴⡶⠾⠟⠛⠋⢹⡏⠀⢹⡇⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀                                                  |\
-|   ⠀⢠⣿⠀⠀⠀⠀⢀⣈⣿⣶⠿⠿⠛⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀                                                  |\
-|   ⠀⢸⣿⣴⠶⠞⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀                                                  |\
-|   ⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀                                   Exit: [ESC]    |\
-|  In progress \%                                                 Confirm: [ENTER]  |\
+|                                                                                   |\
+|                                              P S o C  6   M o n i t o r           |\
+|                                                                                   |\
+|                                     Device Status                                 |\
+|                                                                                   |\
+|                                         - PSoc 6:                                 |\
+|                                         - Watchdog:                               |\
+|                                                                                   |\
+|                                     Info                                          |\
+|                                                                                   |\
+|                                         - Errors:                                 |\
+|                                                                                   |\
+|                                                                                   |\
+|                                                                                   |\
+|                                                                 Confirm: [ENTER]  |\
+|  In progress                                                  Back/Exit: [ESC]    |\
 +-----------------------------------------------------------------------------------+\
 "};
 
@@ -116,40 +135,13 @@ const char *monitor_menu_template =
 //
 //};
 
-//const char *serial_menu_template[] =
-//    {
-//        "+-----------------------------------------------------------------------------+",
-//        "|                          M o n i t o r   P S o c 6                          |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                  Selecione para escolher uma porta serial                   |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                   ( ) PSoC principal:                                       |",
-//        "|                       Status:                                               |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                   ( ) PSoc controle:                                        |",
-//        "|                       Status:                                               |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                       Apagar: [BACKSPACE]                                   |",
-//        "|  Confirma: [ENTER]    Voltar/Cancelar: [ESC]       Navegar Menu: [W] e [S]  |",
-//        "+-----------------------------------------------------------------------------+"
-//
-//};
-//****************************************************************************************
-
 /**
  * @brief  Clear screen and print a new one
  * @param  background: screen template to print as background
  * @param  input_layer: screen layer to print over the background
  * @retval None
  */
-void update_screen(const char *background, char *input_layer)
+void update_screen(const char *background, char *input_layer, char *ascii_art[])
 {
     char bck_ch, input_ch;
 
@@ -169,6 +161,18 @@ void update_screen(const char *background, char *input_layer)
             }
         }
     }
+
+    // Print ASCII art
+    if (ascii_art != NULL)
+    {
+        gotoxy(1, 3);
+        for (int i = 0; **(ascii_art + i) ; i++)
+        {
+            gotoxy(1 + i, 3);
+            printf("%s", ascii_art[i]);
+        }
+    }
+
     // force terminal output update
     fflush(stdout);
     // clear input layer
@@ -225,7 +229,7 @@ int get_menu_option(char *input_layer)
  * @brief  Get user string input from keyboard
  * @param  input_layer: screen layer to print over the background
  * @param  str_buffer: buffer to store the input string
- * @param  max_str_len: maximum input string length 
+ * @param  max_str_len: maximum input string length
  * @retval string length when input confirmed, -1 when input canceled and -2 otherwise
  */
 int get_keyboard_str(char *input_layer, char *str_buffer, int max_str_len)
