@@ -79,9 +79,9 @@ int _open_serial_port(const char * device, uint32_t baud_rate)
   options.c_oflag &= ~(ONLCR | OCRNL);
   options.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
 
-  // Set up timeouts: Calls to read() will return as soon as there is
-  // at least one byte available or when 100 ms has passed.
-  options.c_cc[VTIME] = 1;
+  // timeout in deciseconds
+  options.c_cc[VTIME] = 0;
+  // minimum of number input read.
   options.c_cc[VMIN] = 0;
 
   // This code only supports certain standard baud rates. Supporting

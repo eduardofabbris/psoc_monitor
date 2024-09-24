@@ -1,6 +1,7 @@
 #include "include/util.h"
 #include "include/menu.h"
 #include "include/serial.h"
+#include "include/log_management.h"
 //#include "include/serial.h"
 //#include "include/fileManagement.h"
 
@@ -12,7 +13,7 @@
 // erst_cnt     // external reset counter
 // buffer_cnt   // number of buffers in file
 
-int manage_monitor_menu();
+int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port);
 //=========== GLOBAL VARIABLES ===========
 
 extern char *main_menu_template;
@@ -22,7 +23,6 @@ extern char *prompt_menu_template;
 const char *connected_status_template       =  "Connected";
 const char *error_status_template           =  "Error connecting to port!";
 const char *exit_prompt_template            =  "Are you sure you want to Exit?";
-//const char *progress_prompt_template        =  "In progress";
 const char *progrss_spinner_template        = "|/-\\";
 //const char *attempting_status_template       =  "Attempting connection...";
 //const char *lost_connection_status_template  =  "Lost connection...";
@@ -234,7 +234,7 @@ int main(){
                     // Copy port info and check port
                     // TODO:create new log file
                     // Monitoring management
-                    manage_monitor_menu();
+                    manage_monitor_menu(&psoc_port, &monitor_port);
                     fsm_st = FSM_IDLE_ST;
 
                 }
@@ -269,30 +269,33 @@ int main(){
     return 0;
 }
 
-//int monitoring_management(serial_port_t *psoc_port, serial_port_t *monitor_port)
-int manage_monitor_menu()
+int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
 {
-    char input_layer[TERM_N_ROW*TERM_N_COL] = {0};
-    char user_input = 0;
-
+    log_info_t monitoring_info;
     enum monitor_menu_st {
             FSM_IDLE_ST,
             FSM_TOGGLE_DEBUG_ST,
             FSM_EXIT_PROMT_ST
         };
 
+    char input_layer[TERM_N_ROW*TERM_N_COL] = {0};
+    char user_input = 0;
+    char *status_prompt = NULL;
+
     clock_t spinner_timer = 0;
+
     int spinner_cnt = 0, temp;
     int fsm_st = FSM_IDLE_ST,
         exit_flag = 0,
         debug_flag = 0;
-    char *status_prompt = NULL;
 
     //
     while(!exit_flag)
     {
 
         // TODO: create listen function
+        listen_psoc(psoc_port, &monitoring_info);
+
         if(kbhit())
         {
             // read last character in case ANSI escape sequences
@@ -303,8 +306,6 @@ int manage_monitor_menu()
 				// Listen to menu option
 				case FSM_IDLE_ST:
                     exit_flag = 0;
-
-                    //status_prompt = (char *) progress_prompt_template;
 
                     if (user_input == ESC)
                     {
@@ -350,6 +351,10 @@ int manage_monitor_menu()
 
 			}
         }
+        if (psoc_port->status)
+            memcpy(input_layer + 6*TERM_N_COL + 56 , "1", 1);
+        else
+            memcpy(input_layer + 6*TERM_N_COL + 56 , "0",  1);
 
         // Change defualt prompt
         if (status_prompt != NULL)
