@@ -94,8 +94,8 @@ const char *monitor_menu_template =
 |                                                                                   |\
 |                                     Device Status                                 |\
 |                                                                                   |\
-|                                         - PSoc 6:                                 |\
-|                                         - Watchdog:                               |\
+|                                         - PSoc 6: Connected                       |\
+|                                         - Watchdog: Connected                     |\
 |                                                                                   |\
 |                                     Info                                          |\
 |                                                                                   |\

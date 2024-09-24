@@ -48,15 +48,17 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
                 {
                     fsm_st = FSM_READ_PCKT_ST;
                 }
-                // Alive signal received
+                // Alive signal received TODO: status package
                 else if (*read_ptr == 'A')
                 {
                     psoc_port->status = 1;
+                    psoc_port->timeout_cnt = get_clock(); 
                 }
                 // Waiting start TODO: remove 
                 else if (*read_ptr == 'W')
                 {
                     psoc_port->status = 1;
+                    psoc_port->timeout_cnt = get_clock(); 
                 }
                 // Invalid operation
                 else

@@ -25,7 +25,7 @@ const char *error_status_template           =  "Error connecting to port!";
 const char *exit_prompt_template            =  "Are you sure you want to Exit?";
 const char *progrss_spinner_template        = "|/-\\";
 //const char *attempting_status_template       =  "Attempting connection...";
-//const char *lost_connection_status_template  =  "Lost connection...";
+const char *lost_connection_status_template  =  "Lost connection...";
 
 void init_terminal()
 {
@@ -293,8 +293,23 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
     while(!exit_flag)
     {
 
-        // TODO: create listen function
+        // TODO: create a way to stop monitorig device or external watchdog
+        // TODO: create listen functions
         listen_psoc(psoc_port, &monitoring_info);
+
+        // Verify PSoC UART timeout
+        if (time_diff(psoc_port->timeout_cnt) > 1000)
+        {
+            temp = strlen(lost_connection_status_template);
+            memcpy(input_layer + TERM_N_COL*6 + 52, lost_connection_status_template, temp);
+        }
+
+        // Verify Monitoring Device UART timeout
+        if (time_diff(monitor_port->timeout_cnt) > 1000)
+        {
+            temp = strlen(lost_connection_status_template);
+            memcpy(input_layer + TERM_N_COL*7 + 54, lost_connection_status_template, temp);
+        }
 
         if(kbhit())
         {
@@ -351,12 +366,8 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
 
 			}
         }
-        if (psoc_port->status)
-            memcpy(input_layer + 6*TERM_N_COL + 56 , "1", 1);
-        else
-            memcpy(input_layer + 6*TERM_N_COL + 56 , "0",  1);
 
-        // Change defualt prompt
+        // Change default prompt
         if (status_prompt != NULL)
         {
             temp = strlen(status_prompt);
