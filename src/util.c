@@ -8,6 +8,15 @@
  */
 #include "include/util.h"
 
+void debug_print(const char *msg)
+{
+    gotoxy(20, 0); 
+    printf("Debug output: %s", msg); 
+    fflush(stdout);
+    char dummy_ch;
+    while(!read(STDIN_FILENO, &dummy_ch, 1));
+}
+
 /**
  * @brief  Computes the time difference
  * @param  start_t: initial time

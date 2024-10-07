@@ -99,7 +99,7 @@ const char *monitor_menu_template =
 |                                                                                   |\
 |                                     Info                                          |\
 |                                                                                   |\
-|                                         - Errors:                                 |\
+|                                         - Buffers:                                |\
 |                                                                                   |\
 |                                                                                   |\
 |                                                                                   |\
@@ -108,32 +108,27 @@ const char *monitor_menu_template =
 +-----------------------------------------------------------------------------------+\
 "};
 
-//const char *monitor_menu_template[] =
-//    {
-//        "+-----------------------------------------------------------------------------+",
-//        "|                          M o n i t o r   P S o c 6                          |",
-//        "|                                                                             |",
-//        "|  INFORMACOES                                                                |",
-//        "|     - Alive serial recebido:                                                |",
-//        "|     - Buffers recebidos:                                                    |",
-//        "|     - Resets sinal alive:                                                   |",
-//        "|     - Resets alive serial:                                                  |",
-//                //TODO: remove debug signals
-//        "|                                                                             |",
-//        "|  STATUS                                                                     |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|                                                                             |",
-//        "|  Confirma: [ENTER]                                           Voltar: [ESC]  |",
-//        "+-----------------------------------------------------------------------------+"
-//
-//};
+const char *debug_menu_template =
+{"\
++-----------------------------------------------------------------------------------+\
+|                                   |                                               |\
+|    +++ Error Injection +++        |          P S o C  6   M o n i t o r (Debug)   |\
+|                                   |                                               |\
+|  - Et: time fault                 | Device Status                                 |\
+|  - Es: single sample bit flip     |                                               |\
+|  - Ea: stuck sample               |     - PSoc 6: Connected                       |\
+|  - Eh: core hang                  |     - Watchdog: Connected                     |\
+|  - Eb: memory redundancy          |                                               |\
+|                                   | Info                                          |\
+|                                   |                                               |\
+|                                   |     - Buffers:                                |\
+|                                   |     - DUT response countdown:                 |\
+|                                   |     - WD response countdown:                  |\
+|                                   |     - Serial reset counter:                   |\
+|                                   |     - Hang reset counter:                     |\
+|  In progress                      |                              Back/Exit: [ESC] |\
++-----------------------------------------------------------------------------------+\
+"};
 
 /**
  * @brief  Clear screen and print a new one

@@ -24,6 +24,11 @@ typedef struct serial_port_struct{
 
 //------------> DEFINES
 #define DEBUG_SERIAL_EN 1
+#define PSOC6_CONNECTION_TIMEOUT 8   // Serial connection timeout in seconds
+#define MONITOR_CONNECTION_TIMEOUT 8 // Serial connection timeout in seconds
+
+
+
 
 //static void print_error(const char * context);
 

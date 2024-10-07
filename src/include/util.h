@@ -22,6 +22,7 @@ double time_diff(clock_t start_t);
 char *get_timeinfo();
 void gotoxy(int x, int y);
 void hide_cursor(int state);
+void debug_print(const char *msg);
 
 #ifdef _WIN32 // @windows
 

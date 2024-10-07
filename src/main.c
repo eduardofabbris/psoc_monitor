@@ -15,10 +15,15 @@
 
 int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port);
 //=========== GLOBAL VARIABLES ===========
+extern uint8_t rx_byte;
+extern int psoc6_listening_fsm;
+extern int pckt_num;
+extern uint32_t global_checksum;
 
 extern char *main_menu_template;
 extern char *monitor_ascii_art[];
 extern char *monitor_menu_template;
+extern char *debug_menu_template;
 extern char *prompt_menu_template;
 const char *connected_status_template       =  "Connected";
 const char *error_status_template           =  "Error connecting to port!";
@@ -275,6 +280,7 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
     enum monitor_menu_st {
             FSM_IDLE_ST,
             FSM_TOGGLE_DEBUG_ST,
+            FSM_INJECT_FAULT_ST,
             FSM_EXIT_PROMT_ST
         };
 
@@ -282,6 +288,10 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
     char user_input = 0;
     char *status_prompt = NULL;
 
+    char info_buffer[100] = {0};
+
+    double psoc_timer,
+           monitor_timer;
     clock_t spinner_timer = 0;
 
     int spinner_cnt = 0, temp;
@@ -289,7 +299,11 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
         exit_flag = 0,
         debug_flag = 0;
 
-    //
+    // TODO: reset variables
+    // TODO: Send reset command to reset DUT timestamp
+    monitoring_info.session.buffer_cnt = 0;
+    // TODO: get initial timestamp
+
     while(!exit_flag)
     {
 
@@ -298,14 +312,16 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
         listen_psoc(psoc_port, &monitoring_info);
 
         // Verify PSoC UART timeout
-        if (time_diff(psoc_port->timeout_cnt) > 1000)
+        psoc_timer = time_diff(psoc_port->timeout_cnt); 
+        if (psoc_timer > PSOC6_CONNECTION_TIMEOUT*1000)
         {
             temp = strlen(lost_connection_status_template);
             memcpy(input_layer + TERM_N_COL*6 + 52, lost_connection_status_template, temp);
         }
 
         // Verify Monitoring Device UART timeout
-        if (time_diff(monitor_port->timeout_cnt) > 1000)
+        monitor_timer = time_diff(monitor_port->timeout_cnt); 
+        if (monitor_timer > MONITOR_CONNECTION_TIMEOUT*1000)
         {
             temp = strlen(lost_connection_status_template);
             memcpy(input_layer + TERM_N_COL*7 + 54, lost_connection_status_template, temp);
@@ -329,7 +345,11 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
                     }
                     else if (user_input == 'D')
                     {
-                        fsm_st = FSM_EXIT_PROMT_ST;
+                        fsm_st = FSM_TOGGLE_DEBUG_ST;
+                    }
+                    else if (user_input == 'E')
+                    {
+                        fsm_st = FSM_INJECT_FAULT_ST;
                     }
 
 					break;
@@ -340,6 +360,39 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
                     if (user_input == 'M')
                     {
                         debug_flag = !debug_flag;
+                    }
+                    fsm_st = FSM_IDLE_ST;
+
+                    break;
+
+                // Emulate errors for Debug 
+                // @note: This debug feature needs to be enabled in DUT device
+                case FSM_INJECT_FAULT_ST:
+
+                    // Single bit flip
+                    if (user_input == 's')
+                    {
+                        write_port(psoc_port->device, (uint8_t *)"Es", 2);
+                    }
+                    // Time hold
+                    else if (user_input == 't')
+                    {
+                        write_port(psoc_port->device, (uint8_t *)"Et", 2);
+                    }
+                    // Stuck in a sample
+                    else if (user_input == 'a')
+                    {
+                        write_port(psoc_port->device, (uint8_t *)"Ea", 2);
+                    }
+                    // Core hang in a infinite loop
+                    else if (user_input == 'h')
+                    {
+                        write_port(psoc_port->device, (uint8_t *)"Eh", 2);
+                    }
+                    // Redundant buffer mismatch 
+                    else if (user_input == 'b')
+                    {
+                        write_port(psoc_port->device, (uint8_t *)"Eb", 2);
                     }
                     fsm_st = FSM_IDLE_ST;
 
@@ -384,10 +437,51 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
             }
         }
 
+        // Number of received buffers info
+        sprintf(info_buffer, "%d",  monitoring_info.session.buffer_cnt);
+        temp = strlen(info_buffer);
+        memcpy(input_layer + TERM_N_COL*11 + 53 , info_buffer, temp);
 
-        update_screen(monitor_menu_template, input_layer, monitor_ascii_art);
+
+
+        sprintf(info_buffer, "Last char: %d, FSM sate: %d, pckt_num: %d, checksum: %u, buffer_index: %d", rx_byte, psoc6_listening_fsm, pckt_num, global_checksum, monitoring_info.psoc.buffer_index);
+        temp = strlen(info_buffer);
+        memcpy(input_layer + 2*TERM_N_COL - 2 - temp, info_buffer, temp);
+
+        // Debug menu enabled
+        if (debug_flag)
+        {
+            update_screen(debug_menu_template, input_layer, NULL);
+
+            // DUT connection timeout info
+            sprintf(info_buffer, "%.2f",  PSOC6_CONNECTION_TIMEOUT - psoc_timer/1000);
+            temp = strlen(info_buffer);
+            memcpy(input_layer + TERM_N_COL*12 + 68 , info_buffer, temp);
+
+            // Watchdog connection timeout info
+            sprintf(info_buffer, "%.2f",  MONITOR_CONNECTION_TIMEOUT - monitor_timer/1000);
+            temp = strlen(info_buffer);
+            memcpy(input_layer + TERM_N_COL*13 + 67 , info_buffer, temp);
+
+            // DUT connection timeout resets (alive signal from serial)
+            sprintf(info_buffer, "%d",  monitoring_info.session.con_rst_cnt);
+            temp = strlen(info_buffer);
+            memcpy(input_layer + TERM_N_COL*14 + 66 , info_buffer, temp);
+
+            // Core hang timeout resets (alive signal)
+            sprintf(info_buffer, "%d",  monitoring_info.session.hang_rst_cnt);
+            temp = strlen(info_buffer);
+            memcpy(input_layer + TERM_N_COL*15 + 64 , info_buffer, temp);
+        }
+        else
+        {
+            update_screen(monitor_menu_template, input_layer, monitor_ascii_art);
+        }
         msleep(10);
     }
+
+    // TODO: get final timestamp
+    // TODO: last append to file with session info 
     return 0;
 }
 
