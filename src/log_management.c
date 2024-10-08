@@ -1,14 +1,109 @@
+/*******************************************************************************
+* @filename: log_management.c
+*
+* @brief:
+*
+*
+*
+*
+********************************************************************************/
+
+/*********************************************************
+* Includes
+*********************************************************/
+
 #include "include/log_management.h"
 
-// create_new_file
-// append_log
-// listen_psoc
+// append_session_log
 // listen_monitor_device
 
+/*********************************************************
+* Global Variables
+*********************************************************/
+
+const char *log_file_header_template =
+{"\
+********************************************************************************\n\
+* @filename:                                                                   *\n\
+* @brief: This file is intended to store information about PSoc6 radiation     *\n\
+*         tests                                                                *\n\
+*                                                                              *\n\
+********************************************************************************\n\
+"};
+
+// Debug
 uint8_t rx_byte = 0;
 int psoc6_listening_fsm  = 0;
-int pckt_num = 0;
-uint32_t global_checksum = 0;
+
+/*********************************************************
+* Function Definitions
+*********************************************************/
+
+/**
+* @brief   Asks monitoring device to trigger DUT reset
+* @param  *monitor_port  : monitor device serial port descriptor
+* @retval None
+*/
+void dut_rst(serial_port_t *monitor_port)
+{
+    write_port(monitor_port->device, (uint8_t *)"WR", 2);
+    msleep(1);
+}
+
+/**
+* @brief  Clear file log information
+* @param  log  : log information from current session
+* @retval None
+*/
+void clear_file_log(log_info_t *log)
+{
+    memset(log->file.name, '\0', 100);
+    log->file.cnt        = 0;
+    log->file.buffer_cnt = 0;
+}
+//****************************************************************************************
+
+/**
+* @brief  Clear session log information
+* @param  log  : log information from current session
+* @retval None
+*/
+void clear_session_log(log_info_t *log)
+{
+    log->session.init_timestamp      =
+    log->session.end_timestamp       =
+    log->session.buffer_timestamp    = 0;
+    log->session.buffer_cnt          =
+    log->session.con_rst_cnt         =
+    log->session.hang_rst_cnt        =
+    log->session.checksum_error_cnt  =
+    log->session.packet_num          = 0;
+}
+//****************************************************************************************
+
+/**
+* @brief  Clear psoc log information
+* @param  log  : log information from current session
+* @retval None
+*/
+void clear_psoc_log(log_info_t *log)
+{
+    // Status
+    log->psoc.timestamp      = 0;
+    log->psoc.rx_packet_cnt  =
+    log->psoc.checksum_error =
+    log->psoc.timeout_error  = 0;
+
+    // Payload
+    for(int i=0; i < MAX_BUFFER_LEN; i++)
+    {
+        log->psoc.received_buffer[i].ADC_in           =
+        log->psoc.received_buffer[i].DAC_out          =
+        log->psoc.received_buffer[i].dt               =
+        log->psoc.received_buffer[i].error_descriptor = 0;
+    }
+}
+//****************************************************************************************
 
 
 /**
@@ -29,17 +124,17 @@ static uint32_t bytes2int(uint8_t *buf_ptr, uint8_t byte_len)
 //****************************************************************************************
 
 /**
-* @brief  Decode packet into buffer format 
-* @param  *pckt    : packet pointer 
-* @param  log      : log information from current session 
-* @return True if received a complete new buffer 
+* @brief  Decode packet into buffer format
+* @param  *pckt    : packet pointer
+* @param  log      : log information from current session
+* @return True if received a complete new buffer
 */
 static uint8_t process_new_pckt(uint8_t *pckt, log_info_t *log)
 {
     static uint16_t last_index = 0;
     uint16_t sequence = 0;
     uint8_t *pckt_ptr = pckt;
-    uint8_t new_buffer_flag = 0; 
+    uint8_t new_buffer_flag = 0;
 
     // Get buffer offset
     sequence = bytes2int(pckt_ptr, 2);
@@ -62,7 +157,6 @@ static uint8_t process_new_pckt(uint8_t *pckt, log_info_t *log)
         log->psoc.received_buffer[sequence + i].DAC_out = bytes2int(pckt_ptr, 2);
         pckt_ptr += 2;
 
-        log->psoc.buffer_index = sequence + i;
     }
     // TODO: identify duplicate packets
 
@@ -79,6 +173,111 @@ static uint8_t process_new_pckt(uint8_t *pckt, log_info_t *log)
 //****************************************************************************************
 
 
+/**
+* @brief  Creates a new file
+* @param  log   : log information from current session
+* @retval None
+*/
+void create_new_file(log_info_t *log)
+{
+    FILE *ptr = NULL;
+    char name_buffer[100] = {0};
+    char *name_ptr;
+    char file_header[FILE_HEADER_N_COL*FILE_HEADER_N_ROW] = {0};
+
+    if(WINDOWS_EN)
+    {
+        system("if not exist \"log\" mkdir \"log\"");
+    }
+    else
+    {
+        system("mkdir -p log");
+    }
+
+    // Creates new file name
+    sprintf(name_buffer, "log%slog_%u_%lu.txt", FILE_SEPARATOR, log->file.cnt, log->session.init_timestamp);
+    memcpy(log->file.name, name_buffer, strlen(name_buffer));
+
+    // Creates header
+    memcpy(file_header, log_file_header_template  , strlen(log_file_header_template ));
+
+    // Copy file name to header
+    name_ptr = name_buffer + 3 + strlen(FILE_SEPARATOR);
+    memcpy(file_header + FILE_HEADER_N_COL*1 + 14, name_ptr, strlen(name_ptr));
+
+    ptr = fopen(name_buffer, "w");
+    if(ptr != NULL)
+    {
+        fprintf(ptr, "%s\n", file_header);
+
+        fclose(ptr);
+    }
+
+    // Increment file counter
+    log->file.cnt += 1;
+
+}
+//****************************************************************************************
+
+/**
+* @brief  Append new buffer information to active file
+* @param  log   : log information from current session
+* @retval None
+*/
+static void append_psoc_log(log_info_t log)
+{
+    FILE *ptr;
+
+    ptr = fopen(log.file.name, "a");
+    if(ptr != NULL)
+    {
+        const char *dateAndTime = get_timeinfo(log.session.buffer_timestamp);
+        // Header
+        fprintf
+            (
+                ptr,
+                "@B%u, %u - received at (%lu) %s",
+                log.file.buffer_cnt,
+                log.psoc.timestamp,
+                log.session.buffer_timestamp,
+                dateAndTime
+            );
+        // Buffer serial reception information
+        fprintf
+            (
+                ptr,
+                "received packets: %d, checksum error: %d, timeout error: %d\n",
+                log.psoc.rx_packet_cnt,
+                log.psoc.checksum_error,
+                log.psoc.timeout_error
+            );
+
+        // Payload
+        for(int i=0; i < MAX_BUFFER_LEN; i++)
+        {
+
+            fprintf(ptr, "%-6d\t%-6d\t%-6d\t%-6d\n",
+                log.psoc.received_buffer[i].ADC_in,
+                log.psoc.received_buffer[i].DAC_out,
+                log.psoc.received_buffer[i].dt,
+                log.psoc.received_buffer[i].error_descriptor
+            );
+
+        }
+        fclose(ptr);
+    }
+
+}
+//****************************************************************************************
+
+// void append_session_log(log_info_t *log)
+
+/**
+* @brief  Listen to DUT via serial
+* @param  *psco_port  : DUT serial port descriptor
+* @param  *log        : log information from current session
+* @retval None
+*/
 int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
 {
     enum monitor_menu_st {
@@ -94,11 +293,13 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
     static int byte_cnt = 0;
 
 
-    //uint16_t sequence = 0;
-    //uint8_t *pckt_ptr;
-    uint8_t process_pckt = 0;
+    static clock_t packet_timer;
 
-    uint8_t read_buffer[1024] = {0};
+    uint8_t proc_pckt_flag  = 0,
+            new_buf_flag    = 0,
+            append_buf_flag = 0;
+
+    uint8_t read_buffer[4096] = {0};
     uint8_t *read_ptr = read_buffer;
     int buf_len = 0;
 
@@ -114,7 +315,7 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
             // Idle state
             case FSM_IDLE_ST:
                 // Reset variables
-                process_pckt = 0;
+                proc_pckt_flag = 0;
                 byte_cnt = 0;
                 memset(rx_pckt, '\0', sizeof(rx_pckt));
 
@@ -131,8 +332,10 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
                 // Read new data packet
                 if (*read_ptr == 'P')
                 {
-                    pckt_num++;
+                    new_buf_flag = 1;
+                    log->session.packet_num++;
                     checksum = 0x4450;
+                    psoc_port->status = 1;
                     psoc_port->timeout_cnt = get_clock();
                     fsm_st = FSM_READ_PCKT_ST;
                 }
@@ -153,7 +356,7 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
 
             // Receive new packet
             case FSM_READ_PCKT_ST:
-                // TODO: add timeout?
+                packet_timer = get_clock();
 
                 // Build new packet
                 checksum += (byte_cnt & 1) ? *read_ptr : (*read_ptr << 8);
@@ -171,13 +374,16 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
                     // Get only 16 LSB
                     checksum = checksum & 0xFFFF;
 
-                    // Send acknowledge
-                    if (checksum == 0)
+                    if (checksum != 0)
                     {
-                        write_port(psoc_port->device, (uint8_t *)"HR", 2);
-                        process_pckt = 1;
-                        // TODO: store error otherwise
+                        log->psoc.checksum_error = 1;
+                        log->session.checksum_error_cnt += 1;
+                        // Send acknowledge
+                        //write_port(psoc_port->device, (uint8_t *)"HR", 2);
                     }
+
+                    proc_pckt_flag = 1;
+                    log->psoc.rx_packet_cnt += 1;
 
                     fsm_st = FSM_IDLE_ST;
                 }
@@ -193,18 +399,51 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
         buf_len--;
 
         // Process new packet
-        if (process_pckt)
+        if (proc_pckt_flag)
         {
-            process_new_pckt(rx_pckt, log);
+            // End of buffer
+            if( process_new_pckt(rx_pckt, log) > 0 )
+            {
+                log->session.buffer_timestamp = time(NULL);
+                append_buf_flag = 1;
+                new_buf_flag = 0;
+            }
+
+        }
+        // Packet timeout - buffer bad formation
+        if ( new_buf_flag && time_diff(packet_timer) > 250 )
+        {
+            log->psoc.timeout_error = 1;
+            append_buf_flag = 1;
+            new_buf_flag = 0;
+        }
+
+        // Append buffer
+        if ( append_buf_flag )
+        {
+            append_buf_flag = 0;
+
+            // Verify file size
+            if ( log->file.buffer_cnt < MAX_BUFFERS_PER_FILE )
+            {
+                append_psoc_log(*log);
+                log->file.buffer_cnt += 1;
+            }
+            else
+            {
+                create_new_file(log);
+                log->file.buffer_cnt = 0;
+            }
+
+            // Clear buffer
+            clear_psoc_log(log);
 
         }
 
-
     }
     psoc6_listening_fsm = fsm_st;
-    global_checksum = checksum;
     // process data flag
 
     return 0;
 }
-
+//****************************************************************************************

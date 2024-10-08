@@ -36,13 +36,16 @@ double time_diff(clock_t start_t)
  * @retval The system date and time as a string pointer
  * @note   Source code: https://www.w3resource.com/c-programming/time/c-asctime.php
  */
-char *get_timeinfo()
+char *get_timeinfo(time_t timestamp)
 {
     static struct tm *new_time;
-    time_t lctime;
+    time_t lctime = timestamp;
 
     // Get the timestamp in seconds
-    time(&lctime);
+    if (timestamp == 0)
+    {
+        time(&lctime);
+    }
 
     // Convert it to the structure tm
     new_time = localtime(&lctime);

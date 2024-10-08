@@ -1,25 +1,38 @@
+/*******************************************************************************
+* @filename: main.c
+*
+* @brief:
+*
+*
+*
+*
+********************************************************************************/
+
+/*********************************************************
+* Includes
+*********************************************************/
+
 #include "include/util.h"
 #include "include/menu.h"
 #include "include/serial.h"
 #include "include/log_management.h"
-//#include "include/serial.h"
-//#include "include/fileManagement.h"
 
-// buffer_info struct -> add CRC
-// File descriptor
-// file_name
-// file_cnt
-// irst_cnt     // internal reset counter
-// erst_cnt     // external reset counter
-// buffer_cnt   // number of buffers in file
+
+/*********************************************************
+* Function Prototypes
+*********************************************************/
 
 int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port);
-//=========== GLOBAL VARIABLES ===========
+
+/*********************************************************
+* Global Variables
+*********************************************************/
+
+// Debug
 extern uint8_t rx_byte;
 extern int psoc6_listening_fsm;
-extern int pckt_num;
-extern uint32_t global_checksum;
 
+// Templates
 extern char *main_menu_template;
 extern char *monitor_ascii_art[];
 extern char *monitor_menu_template;
@@ -31,6 +44,11 @@ const char *exit_prompt_template            =  "Are you sure you want to Exit?";
 const char *progrss_spinner_template        = "|/-\\";
 //const char *attempting_status_template       =  "Attempting connection...";
 const char *lost_connection_status_template  =  "Lost connection...";
+
+
+/*********************************************************
+* Function Definitions
+*********************************************************/
 
 void init_terminal()
 {
@@ -92,7 +110,7 @@ int main(){
     int fsm_st, str_len;
     int menu_option = 0, temp = 0;
     char user_input[100] = {0};
-    char *background = NULL,
+    char *background    = NULL,
          *status_prompt = NULL;
 
     // Manage Main Menu
@@ -196,6 +214,7 @@ int main(){
                     monitor_port.device = open_serial_port(monitor_port.name, monitor_port.name_len, 115200);
                     if (monitor_port.device > 0)
                     {
+                        // TODO: flush serial port?
                         // Verify device
                         // TODO: listen to port and change active status
                         fsm_st = FSM_GET_LOG_INFO_ST;
@@ -295,36 +314,49 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
     clock_t spinner_timer = 0;
 
     int spinner_cnt = 0, temp;
-    int fsm_st = FSM_IDLE_ST,
-        exit_flag = 0,
-        debug_flag = 0;
+    int fsm_st      = FSM_IDLE_ST,
+        exit_flag   = 0,
+        debug_flag  = 0;
 
-    // TODO: reset variables
     // TODO: Send reset command to reset DUT timestamp
-    monitoring_info.session.buffer_cnt = 0;
-    // TODO: get initial timestamp
+
+    // Clear variables
+    clear_psoc_log(&monitoring_info);
+    clear_session_log(&monitoring_info);
+    clear_file_log(&monitoring_info);
+
+    // Get initial timestamp
+    monitoring_info.session.init_timestamp = time(NULL);
+
+    // Creates new file
+    create_new_file(&monitoring_info);
 
     while(!exit_flag)
     {
 
-        // TODO: create a way to stop monitorig device or external watchdog
         // TODO: create listen functions
         listen_psoc(psoc_port, &monitoring_info);
 
         // Verify PSoC UART timeout
-        psoc_timer = time_diff(psoc_port->timeout_cnt); 
+        psoc_timer = time_diff(psoc_port->timeout_cnt);
         if (psoc_timer > PSOC6_CONNECTION_TIMEOUT*1000)
         {
             temp = strlen(lost_connection_status_template);
             memcpy(input_layer + TERM_N_COL*6 + 52, lost_connection_status_template, temp);
+            psoc_port->status = 0;
+
+            // Restart DUT device
+            dut_rst(monitor_port);
+            monitoring_info.session.con_rst_cnt += 1;
         }
 
         // Verify Monitoring Device UART timeout
-        monitor_timer = time_diff(monitor_port->timeout_cnt); 
+        monitor_timer = time_diff(monitor_port->timeout_cnt);
         if (monitor_timer > MONITOR_CONNECTION_TIMEOUT*1000)
         {
             temp = strlen(lost_connection_status_template);
             memcpy(input_layer + TERM_N_COL*7 + 54, lost_connection_status_template, temp);
+            monitor_port->status = 0;
         }
 
         if(kbhit())
@@ -365,7 +397,7 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
 
                     break;
 
-                // Emulate errors for Debug 
+                // Emulate errors for Debug
                 // @note: This debug feature needs to be enabled in DUT device
                 case FSM_INJECT_FAULT_ST:
 
@@ -389,7 +421,7 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
                     {
                         write_port(psoc_port->device, (uint8_t *)"Eh", 2);
                     }
-                    // Redundant buffer mismatch 
+                    // Redundant buffer mismatch
                     else if (user_input == 'b')
                     {
                         write_port(psoc_port->device, (uint8_t *)"Eb", 2);
@@ -444,7 +476,7 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
 
 
 
-        sprintf(info_buffer, "Last char: %d, FSM sate: %d, pckt_num: %d, checksum: %u, buffer_index: %d", rx_byte, psoc6_listening_fsm, pckt_num, global_checksum, monitoring_info.psoc.buffer_index);
+        sprintf(info_buffer, "Last char: %d, FSM sate: %d, pckt_num: %u", rx_byte, psoc6_listening_fsm, monitoring_info.session.packet_num);
         temp = strlen(info_buffer);
         memcpy(input_layer + 2*TERM_N_COL - 2 - temp, info_buffer, temp);
 
@@ -480,8 +512,10 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
         msleep(10);
     }
 
-    // TODO: get final timestamp
-    // TODO: last append to file with session info 
+    // Get end of session timestamp
+    monitoring_info.session.end_timestamp = time(NULL);
+
+    // TODO: last append to file with session info
     return 0;
 }
 
