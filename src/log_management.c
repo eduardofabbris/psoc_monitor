@@ -537,6 +537,9 @@ uint8_t listen_monitor_device(serial_port_t *monitor_port)
                 // Core hang timeout indication
                 else if (*read_ptr == 'T')
                 {
+                    monitor_port->status = 1;
+                    monitor_port->timeout_cnt = get_clock();
+
                     need_rst = 1;
 
                 }
@@ -562,7 +565,8 @@ uint8_t listen_monitor_device(serial_port_t *monitor_port)
 /**
 * @brief  Listen to serial device command
 * @param  *device_port  : device's serial port descriptor
-* @retval True if the deseired command was read
+* @param  *device_cmd   : the command to listen to
+* @retval True if the desired command was read
 */
 uint8_t attempt_connection(serial_port_t *device_port, const char *device_cmd)
 {

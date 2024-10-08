@@ -32,6 +32,7 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port);
 extern uint8_t rx_byte;
 extern int psoc6_listening_fsm;
 
+// User additional information
 extern char user_header_info[100];
 
 // Templates
@@ -40,11 +41,12 @@ extern char *monitor_ascii_art[];
 extern char *monitor_menu_template;
 extern char *debug_menu_template;
 extern char *prompt_menu_template;
-const char *connected_status_template       =  "Connected";
-const char *error_status_template           =  "Error connecting to port!";
-const char *exit_prompt_template            =  "Are you sure you want to Exit?";
-const char *progrss_spinner_template        = "|/-\\";
-//const char *attempting_status_template       =  "Attempting connection...";
+
+const char *connected_status_template        =  "Connected";
+const char *error_status_template            =  "Error connecting to port!";
+const char *exit_prompt_template             =  "Are you sure you want to Exit?";
+const char *progrss_spinner_template         = "|/-\\";
+const char *attempting_status_template       =  "Attempting connection...";
 const char *lost_connection_status_template  =  "Lost connection...";
 
 
@@ -52,26 +54,38 @@ const char *lost_connection_status_template  =  "Lost connection...";
 * Function Definitions
 *********************************************************/
 
-void init_terminal()
+static void init_terminal()
 {
     if(WINDOWS_EN)
     {
         system("MODE con cols=80 lines=22");
-        system("if not exist \"temp\" mkdir \"temp\"");
-        system("if not exist \"log\" mkdir \"log\"");
     }
     else
     {
         set_nonblock(1);
         hide_cursor(1);
 
-        //mkdir -p
-        //system("mkdir -p temp");
-        //system("mkdir -p log");
-        //resizeterm(22,80);
         //system("echo -ne '\e[8;22;80t'");
     }
 }
+
+static void reset_terminal()
+{
+    if(WINDOWS_EN)
+    {
+        system("MODE con cols=120 lines=30");
+    }
+    else
+    {
+        set_nonblock(0);
+        hide_cursor(0);
+
+        //system("echo -ne '\e[8;24;80t'");
+
+    }
+    clrscr();
+}
+
 int main(){
     char input_layer[TERM_N_ROW*TERM_N_COL] = {0};
     init_terminal();
@@ -107,6 +121,8 @@ int main(){
             FSM_GET_MONITOR_DEVICE_PORT_ST,
             FSM_GET_LOG_INFO_ST
         };
+
+    clock_t attempt_connection_timer;
 
     serial_port_t psoc_port, monitor_port;
     int fsm_st, str_len;
@@ -212,22 +228,31 @@ int main(){
                     memcpy(monitor_port.name, user_input, str_len);
                     monitor_port.name_len = str_len;
 
-                    // Attempt connection
-                    monitor_port.device = open_serial_port(monitor_port.name, monitor_port.name_len, 115200);
-                    if (monitor_port.device > 0)
+                    if (strcmp(monitor_port.name, psoc_port.name) != 0)
                     {
-                        // TODO: flush serial port?
-                        // Verify device
-                        // TODO: listen to port and change active status
-                        memset(user_input, '\0', sizeof(user_input));
-                        fsm_st = FSM_GET_LOG_INFO_ST;
+                        // Attempt connection
+                        monitor_port.device = open_serial_port(monitor_port.name, monitor_port.name_len, 115200);
 
+                        if (monitor_port.device > 0)
+                        {
+                            // TODO: flush serial port?
+                            // Verify device
+                            // TODO: listen to port and change active status
+                            memset(user_input, '\0', sizeof(user_input));
+                            fsm_st = FSM_GET_LOG_INFO_ST;
+
+                        }
+                        else
+                        {
+                            status_prompt = (char *) error_status_template;
+
+                        }
                     }
-					else
-					{
+                    else
+                    {
                         status_prompt = (char *) error_status_template;
+                    }
 
-					}
 
                 }
 
@@ -258,12 +283,21 @@ int main(){
                 // Creates file with timestamp and begin monitoring
                 else if (str_len >= 0)
                 {
-                    memcpy(user_header_info, user_input, strlen(user_input));
                     // Copy port info and check port
+                    memcpy(user_header_info, user_input, strlen(user_input));
+
+                    // Rest port timeouts
+                    psoc_port.timeout_cnt = get_clock();
+                    monitor_port.timeout_cnt = get_clock();
+
                     // Monitoring management
                     manage_monitor_menu(&psoc_port, &monitor_port);
-                    fsm_st = FSM_IDLE_ST;
 
+                    // Close open ports
+                    close(psoc_port.device);
+                    close(monitor_port.device);
+
+                    fsm_st = FSM_IDLE_ST;
                 }
 
                 break;
@@ -279,19 +313,8 @@ int main(){
 			msleep(10);
 		}
     }
-    hide_cursor(0);
-    set_nonblock(0);
 
-    //#ifdef _WIN32
-    //    system("MODE con cols=120 lines=30");
-    //    system("if exist \"temp\" rmdir /S /Q temp");
-    //#else
-    //    //resizeterm(24,80);
-    //    //system("echo -ne '\e[8;24;80t'");
-    //    //system("rm -fr temp");
-    //    //endwin();
-    //#endif
-    //clrscr();
+    reset_terminal();
 
     return 0;
 }
@@ -314,6 +337,7 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
 
     double psoc_timer,
            monitor_timer;
+
     clock_t spinner_timer = 0;
 
     int spinner_cnt = 0, temp;
@@ -338,8 +362,19 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
     while(!exit_flag)
     {
 
-        // TODO: create listen functions
+        // Listen to devices
         listen_psoc(psoc_port, &monitoring_info);
+
+        // TODO: verify if valid!
+        // DUT core hang timeout
+        if ( listen_monitor_device(monitor_port) )
+        {
+            // Restart DUT device
+            //dut_rst(monitor_port);
+            monitoring_info.session.hang_rst_cnt += 1;
+            // Reset timeout
+            psoc_port->timeout_cnt = get_clock();
+        }
 
         // Verify PSoC UART timeout
         psoc_timer = time_diff(psoc_port->timeout_cnt);
@@ -352,6 +387,8 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
             // Restart DUT device
             dut_rst(monitor_port);
             monitoring_info.session.con_rst_cnt += 1;
+            // Reset timeout
+            psoc_port->timeout_cnt = get_clock();
         }
 
         // Verify Monitoring Device UART timeout

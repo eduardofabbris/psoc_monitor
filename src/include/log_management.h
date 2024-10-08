@@ -90,6 +90,8 @@ typedef struct log_struct {
 * Function Prototypes
 *********************************************************/
 
+uint8_t attempt_connection(serial_port_t *device_port, const char *device_cmd);
+uint8_t listen_monitor_device(serial_port_t *monitor_port);
 int listen_psoc(serial_port_t *psoc_port, log_info_t *log);
 void dut_rst(serial_port_t *monitor_port);
 
