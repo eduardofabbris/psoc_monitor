@@ -72,7 +72,8 @@ typedef struct log_struct {
         uint32_t con_rst_cnt;         // Serial connection reset counter (alive)
         uint32_t hang_rst_cnt;        // Core hang reset counter (alive)
         uint32_t checksum_error_cnt;  // Number of checksum errors
-        uint32_t packet_num;          // Total number of received packets since the beginning of session 
+        uint32_t packet_num;          // Total number of received packets since the beginning of session
+        uint32_t con_lost_monitor;    // Monitor device serial connection lost counter
     } session;
 
     // File information
@@ -92,6 +93,7 @@ typedef struct log_struct {
 int listen_psoc(serial_port_t *psoc_port, log_info_t *log);
 void dut_rst(serial_port_t *monitor_port);
 
+void append_session_log(log_info_t log);
 void create_new_file(log_info_t *log);
 void clear_psoc_log(log_info_t *log);
 void clear_session_log(log_info_t *log);

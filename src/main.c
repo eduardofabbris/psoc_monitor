@@ -515,7 +515,9 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
     // Get end of session timestamp
     monitoring_info.session.end_timestamp = time(NULL);
 
-    // TODO: last append to file with session info
+    // Append to file session info
+    append_session_log(monitoring_info);
+
     return 0;
 }
 

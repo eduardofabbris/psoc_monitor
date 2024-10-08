@@ -14,7 +14,6 @@
 
 #include "include/log_management.h"
 
-// append_session_log
 // listen_monitor_device
 
 /*********************************************************
@@ -77,7 +76,8 @@ void clear_session_log(log_info_t *log)
     log->session.con_rst_cnt         =
     log->session.hang_rst_cnt        =
     log->session.checksum_error_cnt  =
-    log->session.packet_num          = 0;
+    log->session.packet_num          =
+    log->session.con_lost_monitor    = 0;
 }
 //****************************************************************************************
 
@@ -270,7 +270,36 @@ static void append_psoc_log(log_info_t log)
 }
 //****************************************************************************************
 
-// void append_session_log(log_info_t *log)
+/**
+* @brief  Append session information to active file
+* @param  log   : log information from current session
+* @retval None
+*/
+void append_session_log(log_info_t log)
+{
+    FILE *ptr;
+
+    ptr = fopen(log.file.name, "a");
+    if(ptr != NULL)
+    {
+        // Session status
+        fprintf
+            (
+                ptr,
+                "@S init tm: %lu, end tm: %lu, tot bufs: %u, con rsts: %u, hang rsts: %u, chsum errors: %u, monit con: %u\n",
+                log.session.init_timestamp,
+                log.session.end_timestamp,
+                log.session.buffer_cnt,
+                log.session.con_rst_cnt,
+                log.session.hang_rst_cnt,
+                log.session.checksum_error_cnt,
+                log.session.con_lost_monitor
+            );
+
+        fclose(ptr);
+    }
+}
+//****************************************************************************************
 
 /**
 * @brief  Listen to DUT via serial
