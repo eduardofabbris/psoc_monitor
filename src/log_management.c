@@ -200,7 +200,7 @@ void create_new_file(log_info_t *log)
     }
 
     // Creates new file name
-    sprintf(name_buffer, "log%slog_%u_%lu.txt", FILE_SEPARATOR, log->file.cnt, log->session.init_timestamp);
+    sprintf(name_buffer, "log%slog_%lu_%u.txt", FILE_SEPARATOR, log->session.init_timestamp, log->file.cnt);
     memcpy(log->file.name, name_buffer, strlen(name_buffer));
 
     // Creates header
@@ -323,8 +323,7 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
     enum monitor_menu_st {
             FSM_IDLE_ST,
             FSM_OP_SEL_ST,
-            FSM_READ_PCKT_ST,
-            FSM_EXIT_PROMT_ST
+            FSM_READ_PCKT_ST
         };
 
     static int fsm_st = FSM_IDLE_ST;
@@ -485,5 +484,141 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
     // process data flag
 
     return 0;
+}
+//****************************************************************************************
+
+/**
+* @brief  Listen to Monitor Device via serial
+* @param  *monitor_port  : monitor serial port descriptor
+* @retval True if DUT device needs to be restarted
+*/
+uint8_t listen_monitor_device(serial_port_t *monitor_port)
+{
+    enum monitor_menu_st {
+            FSM_IDLE_ST,
+            FSM_OP_SEL_ST
+        };
+
+    static int fsm_st = FSM_IDLE_ST;
+
+    uint8_t need_rst = 0;
+    uint8_t read_buffer[4096] = {0};
+    uint8_t *read_ptr = read_buffer;
+    int buf_len = 0;
+
+
+    // Try to fill input buffer
+    buf_len = read_port(monitor_port->device, read_buffer, sizeof(read_buffer));
+
+    // Process input buffer
+    while(buf_len > 0)
+    {
+        switch (fsm_st)
+        {
+            // Idle state
+            case FSM_IDLE_ST:
+
+                // External Watchdog ID
+                if (*read_ptr == 'W')
+                {
+                    fsm_st = FSM_OP_SEL_ST;
+                }
+
+                break;
+            // Select operation
+            case FSM_OP_SEL_ST:
+
+                // Alive signal received
+                if (*read_ptr == 'A')
+                {
+                    monitor_port->status = 1;
+                    monitor_port->timeout_cnt = get_clock();
+                }
+                // Core hang timeout indication
+                else if (*read_ptr == 'T')
+                {
+                    need_rst = 1;
+
+                }
+                fsm_st = FSM_IDLE_ST;
+
+                break;
+
+            // Invalid state
+            default:
+                fsm_st = FSM_IDLE_ST;
+                break;
+
+        }
+        read_ptr++;
+        buf_len--;
+
+    }
+
+    return need_rst;
+}
+//****************************************************************************************
+
+/**
+* @brief  Listen to serial device command
+* @param  *device_port  : device's serial port descriptor
+* @retval True if the deseired command was read
+*/
+uint8_t attempt_connection(serial_port_t *device_port, const char *device_cmd)
+{
+    enum monitor_menu_st {
+            FSM_IDLE_ST,
+            FSM_OP_SEL_ST
+        };
+
+    int fsm_st = FSM_IDLE_ST;
+    int buf_len = 0;
+    uint8_t received_cmd = 0;
+    uint8_t read_buffer[4096] = {0};
+    uint8_t *read_ptr = read_buffer;
+
+
+    // Try to fill input buffer
+    buf_len = read_port(device_port->device, read_buffer, sizeof(read_buffer));
+
+    // Process input buffer
+    while(buf_len > 0)
+    {
+        switch (fsm_st)
+        {
+            // Idle state
+            case FSM_IDLE_ST:
+
+                // Device ID
+                if (*read_ptr == device_cmd[0])
+                {
+                    fsm_st = FSM_OP_SEL_ST;
+                }
+
+                break;
+            // Select operation
+            case FSM_OP_SEL_ST:
+
+                // Device operation
+                if (*read_ptr == device_cmd[1])
+                {
+                    received_cmd = 1;
+                }
+                fsm_st = FSM_IDLE_ST;
+
+                break;
+
+            // Invalid state
+            default:
+                fsm_st = FSM_IDLE_ST;
+                break;
+
+        }
+        read_ptr++;
+        buf_len--;
+
+    }
+
+    return received_cmd;
 }
 //****************************************************************************************
