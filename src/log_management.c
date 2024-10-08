@@ -20,15 +20,20 @@
 * Global Variables
 *********************************************************/
 
+// Templates
 const char *log_file_header_template =
 {"\
 ********************************************************************************\n\
 * @filename:                                                                   *\n\
 * @brief: This file is intended to store information about PSoc6 radiation     *\n\
 *         tests                                                                *\n\
+* @info:                                                                       *\n\
 *                                                                              *\n\
 ********************************************************************************\n\
 "};
+
+// User header info
+char user_header_info[100] = {0};
 
 // Debug
 uint8_t rx_byte = 0;
@@ -205,6 +210,9 @@ void create_new_file(log_info_t *log)
     name_ptr = name_buffer + 3 + strlen(FILE_SEPARATOR);
     memcpy(file_header + FILE_HEADER_N_COL*1 + 14, name_ptr, strlen(name_ptr));
 
+    // Copy additional user info to header
+    memcpy(file_header + FILE_HEADER_N_COL*4 + 13, user_header_info, strlen(user_header_info));
+
     ptr = fopen(name_buffer, "w");
     if(ptr != NULL)
     {
@@ -212,6 +220,9 @@ void create_new_file(log_info_t *log)
 
         fclose(ptr);
     }
+
+    // Clear user input
+    memset(user_header_info, '\0', sizeof(user_header_info));
 
     // Increment file counter
     log->file.cnt += 1;

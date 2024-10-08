@@ -29,7 +29,7 @@
 
 // File
 #define FILE_HEADER_N_COL 80    // Header number of columns
-#define FILE_HEADER_N_ROW 6     // Header number of rows
+#define FILE_HEADER_N_ROW 7     // Header number of rows
 #define MAX_BUFFERS_PER_FILE 10 // Maximum number of buffers per file
 
 /*********************************************************

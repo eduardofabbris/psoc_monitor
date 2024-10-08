@@ -32,6 +32,8 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port);
 extern uint8_t rx_byte;
 extern int psoc6_listening_fsm;
 
+extern char user_header_info[100];
+
 // Templates
 extern char *main_menu_template;
 extern char *monitor_ascii_art[];
@@ -217,6 +219,7 @@ int main(){
                         // TODO: flush serial port?
                         // Verify device
                         // TODO: listen to port and change active status
+                        memset(user_input, '\0', sizeof(user_input));
                         fsm_st = FSM_GET_LOG_INFO_ST;
 
                     }
@@ -255,8 +258,8 @@ int main(){
                 // Creates file with timestamp and begin monitoring
                 else if (str_len >= 0)
                 {
+                    memcpy(user_header_info, user_input, strlen(user_input));
                     // Copy port info and check port
-                    // TODO:create new log file
                     // Monitoring management
                     manage_monitor_menu(&psoc_port, &monitor_port);
                     fsm_st = FSM_IDLE_ST;
@@ -318,7 +321,8 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
         exit_flag   = 0,
         debug_flag  = 0;
 
-    // TODO: Send reset command to reset DUT timestamp
+    // Send reset command to reset DUT timestamp
+    dut_rst(monitor_port);
 
     // Clear variables
     clear_psoc_log(&monitoring_info);
@@ -357,6 +361,7 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
             temp = strlen(lost_connection_status_template);
             memcpy(input_layer + TERM_N_COL*7 + 54, lost_connection_status_template, temp);
             monitor_port->status = 0;
+            monitoring_info.session.con_lost_monitor += 1;
         }
 
         if(kbhit())
