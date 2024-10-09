@@ -121,8 +121,8 @@ const char *debug_menu_template =
 |  - Eb: memory redundancy          |                                               |\
 |                                   | Info                                          |\
 |                                   |                                               |\
-|                                   |     - Buffers:                                |\
-|                                   |     - DUT response countdown:                 |\
+|  - Elapsed min:                   |     - Buffers:                                |\
+|  - Received pckts:                |     - DUT response countdown:                 |\
 |                                   |     - WD response countdown:                  |\
 |                                   |     - Serial reset counter:                   |\
 |                                   |     - Hang reset counter:                     |\
@@ -259,16 +259,22 @@ int get_keyboard_str(char *input_layer, char *str_buffer, int max_str_len)
             default:
                 if (str_len < max_str_len)
                 {
-                    str_buffer[str_len] = ch;
+                    if (str_buffer != NULL)
+                    {
+                        str_buffer[str_len] = ch;
+                    }
                     str_len += 1;
                 }
                 break;
         }
     }
 
-    memcpy(input_layer, str_buffer, str_len);
-    // TODO: add blink animation
-    memcpy(input_layer + str_len, "_", 1);
+    if (input_layer != NULL && str_buffer != NULL)
+    {
+        memcpy(input_layer, str_buffer, str_len);
+        // TODO: add blink animation
+        memcpy(input_layer + str_len, "_", 1);
+    }
     return -2;
 }
 //****************************************************************************************

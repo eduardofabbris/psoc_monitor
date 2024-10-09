@@ -31,8 +31,8 @@ typedef struct serial_port_struct{
 * Defines
 **********************************************/
 
-#define DEBUG_SERIAL_EN 1            // Serial port debug output enable
-#define PSOC6_CONNECTION_TIMEOUT 8   // Serial connection timeout in seconds
+#define DEBUG_SERIAL_EN 0            // Serial port debug output enable
+#define PSOC6_CONNECTION_TIMEOUT 10  // Serial connection timeout in seconds
 #define MONITOR_CONNECTION_TIMEOUT 8 // Serial connection timeout in seconds
 
 

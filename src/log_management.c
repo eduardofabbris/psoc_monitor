@@ -48,7 +48,7 @@ int psoc6_listening_fsm  = 0;
 * @param  *monitor_port  : monitor device serial port descriptor
 * @retval None
 */
-void dut_rst(serial_port_t *monitor_port)
+void dut_rst(serial_port_t *psoc_port, serial_port_t *monitor_port)
 {
     write_port(monitor_port->device, (uint8_t *)"WR", 2);
     msleep(1);
@@ -372,8 +372,11 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
                 if (*read_ptr == 'P')
                 {
                     new_buf_flag = 1;
+                    packet_timer = get_clock();
                     log->session.packet_num++;
+
                     checksum = 0x4450;
+
                     psoc_port->status = 1;
                     psoc_port->timeout_cnt = get_clock();
                     fsm_st = FSM_READ_PCKT_ST;
@@ -395,7 +398,6 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
 
             // Receive new packet
             case FSM_READ_PCKT_ST:
-                packet_timer = get_clock();
 
                 // Build new packet
                 checksum += (byte_cnt & 1) ? *read_ptr : (*read_ptr << 8);
@@ -483,7 +485,7 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
     psoc6_listening_fsm = fsm_st;
     // process data flag
 
-    return 0;
+    return new_buf_flag;
 }
 //****************************************************************************************
 
@@ -607,6 +609,8 @@ uint8_t attempt_connection(serial_port_t *device_port, const char *device_cmd)
                 if (*read_ptr == device_cmd[1])
                 {
                     received_cmd = 1;
+                    device_port->status = 1;
+                    device_port->timeout_cnt = get_clock();
                 }
                 fsm_st = FSM_IDLE_ST;
 

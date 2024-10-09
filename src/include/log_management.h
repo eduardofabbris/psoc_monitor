@@ -93,7 +93,7 @@ typedef struct log_struct {
 uint8_t attempt_connection(serial_port_t *device_port, const char *device_cmd);
 uint8_t listen_monitor_device(serial_port_t *monitor_port);
 int listen_psoc(serial_port_t *psoc_port, log_info_t *log);
-void dut_rst(serial_port_t *monitor_port);
+void dut_rst(serial_port_t *psoc_port, serial_port_t *monitor_port);
 
 void append_session_log(log_info_t log);
 void create_new_file(log_info_t *log);
