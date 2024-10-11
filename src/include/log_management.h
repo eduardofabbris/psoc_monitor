@@ -59,8 +59,8 @@ typedef struct log_struct {
         } received_buffer[MAX_BUFFER_LEN];
         uint32_t timestamp;                 // DUT timestamp indicating monitoring time
         uint8_t rx_packet_cnt;              // Received packets per buffer, should be 10
-        uint8_t checksum_error,             // Checksum is different than zero
-                timeout_error;              // Timeout receiving buffer packets
+        uint8_t checksum_error,             // Checksum is different than zero flag
+                timeout_error;              // Timeout receiving buffer packets flag
     } psoc;
 
     // Session information to be stored in file as well

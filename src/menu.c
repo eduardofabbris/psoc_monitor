@@ -110,24 +110,24 @@ const char *monitor_menu_template =
 
 const char *debug_menu_template =
 {"\
-+-----------------------------------------------------------------------------------+\
-|                                   |                                               |\
-|    +++ Error Injection +++        |          P S o C  6   M o n i t o r (Debug)   |\
-|                                   |                                               |\
-|  - Et: time fault                 | Device Status                                 |\
-|  - Es: single sample bit flip     |                                               |\
-|  - Ea: stuck sample               |     - PSoc 6: Connected                       |\
-|  - Eh: core hang                  |     - Watchdog: Connected                     |\
-|  - Eb: memory redundancy          |                                               |\
-|                                   | Info                                          |\
-|                                   |                                               |\
-|  - Elapsed min:                   |     - Buffers:                                |\
-|  - Received pckts:                |     - DUT response countdown:                 |\
-|                                   |     - WD response countdown:                  |\
-|                                   |     - Serial reset counter:                   |\
-|                                   |     - Hang reset counter:                     |\
-|  In progress                      |                              Back/Exit: [ESC] |\
-+-----------------------------------------------------------------------------------+\
++----------------------------------+------------------------------------------------+\
+|                                  |                                                |\
+|         Error Injection          |           P S o C  6   M o n i t o r (Debug)   |\
+|  (Note: needs to be enabled on   |                                                |\
+|         device)                  |  Device Status                                 |\
+|  - Et: Time                      |                                                |\
+|  - Es: Single Upset              |      - PSoc 6: Connected                       |\
+|  - Ea: Latch-up                  |      - Watchdog: Connected                     |\
+|  - Eh: Core hang                 |                                                |\
+|  - Eb: Memory                    |  Info                                          |\
+|  - E5: Stop UART                 |                                                |\
+|                                  |      - Buffers:                                |\
+|  - Elapsed min:                  |      - DUT response countdown:                 |\
+|  - Received pckts:               |      - WD response countdown:                  |\
+|                                  |      - Serial reset counter:                   |\
+|                                  |      - Hang reset counter:                     |\
+|  In progress                     |                               Back/Exit: [ESC] |\
++----------------------------------+------------------------------------------------+\
 "};
 
 /**

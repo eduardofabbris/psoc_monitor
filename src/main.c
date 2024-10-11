@@ -29,7 +29,6 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port);
 *********************************************************/
 
 // Debug
-extern uint8_t rx_byte;
 extern int psoc6_listening_fsm;
 
 // User additional information
@@ -123,6 +122,7 @@ int main(){
                     background = prompt_menu_template;
 
                     // Reset variables
+					memset(user_header_info, '\0', sizeof(user_header_info));
                     memset(psoc_port.name, '\0', sizeof(psoc_port.name));
                     memset(monitor_port.name, '\0', sizeof(monitor_port.name));
                     status_prompt = NULL;
@@ -369,6 +369,12 @@ int main(){
     return 0;
 }
 
+/**
+* @brief  Monitor menu management
+* @param  *psoc_port    : DUT serial port descriptor
+* @param  *monitor_port : Monitor device serial port descriptor
+* @return Zero
+*/
 int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
 {
     log_info_t monitoring_info;
@@ -388,8 +394,11 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
     double psoc_timer,
            monitor_timer;
 
-    clock_t spinner_timer = 0;
+    clock_t spinner_timer       = 0,
+            psoc_rst_timer = 0;
 
+    uint8_t new_buf_flag  = 0,
+            dut_hang_flag = 0;
     int spinner_cnt = 0, temp;
     int fsm_st      = FSM_IDLE_ST,
         exit_flag   = 0,
@@ -413,15 +422,8 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
     {
 
         // Listen to devices
-        int new_buf_flag = listen_psoc(psoc_port, &monitoring_info);
-
-        // DUT core hang timeout
-        if ( listen_monitor_device(monitor_port) && new_buf_flag == 0 )
-        {
-            // Restart DUT device
-            dut_rst(psoc_port, monitor_port);
-            monitoring_info.session.hang_rst_cnt += 1;
-        }
+        new_buf_flag  = listen_psoc(psoc_port, &monitoring_info);
+        dut_hang_flag = listen_monitor_device(monitor_port);
 
         // Verify PSoC UART timeout
         psoc_timer = time_diff(psoc_port->timeout_cnt);
@@ -432,8 +434,25 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
             psoc_port->status = 0;
 
             // Restart DUT device
-            dut_rst(psoc_port, monitor_port);
-            monitoring_info.session.con_rst_cnt += 1;
+            if ( time_diff(psoc_rst_timer) > 5*1000 )
+            {
+                dut_rst(psoc_port, monitor_port);
+                psoc_rst_timer = get_clock();
+                monitoring_info.session.con_rst_cnt += 1;
+            }
+        }
+
+        // DUT core hang timeout
+        if ( dut_hang_flag && new_buf_flag == 0 )
+        {
+            // Restart DUT device
+            if ( time_diff(psoc_rst_timer) > 5*1000 )
+            {
+                dut_rst(psoc_port, monitor_port);
+                psoc_rst_timer = get_clock();
+                psoc_port->timeout_cnt = get_clock();
+                monitoring_info.session.hang_rst_cnt += 1;
+            }
         }
 
         // Verify Monitoring Device UART timeout
@@ -513,6 +532,7 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
                     {
                         write_port(psoc_port->device, (uint8_t *)"Eb", 2);
                     }
+					// TODO: serial hang
                     fsm_st = FSM_IDLE_ST;
 
                     break;
@@ -563,14 +583,15 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
 
 
 
-        //sprintf(info_buffer, "Last char: %d, FSM sate: %d, pckt_num: %u", rx_byte, psoc6_listening_fsm, monitoring_info.session.packet_num);
-        //temp = strlen(info_buffer);
-        //memcpy(input_layer + 2*TERM_N_COL - 2 - temp, info_buffer, temp);
 
         // Debug menu enabled
         if (debug_flag)
         {
-            update_screen(debug_menu_template, input_layer, NULL);
+
+            // Listening PSoC FSM state
+            sprintf(info_buffer, "FSM sate: %d", psoc6_listening_fsm);
+            temp = strlen(info_buffer);
+            memcpy(input_layer + 2*TERM_N_COL - 2 - temp, info_buffer, temp);
 
             // DUT connection timeout info
             sprintf(info_buffer, "%.2f",  PSOC6_CONNECTION_TIMEOUT - psoc_timer/1000);
@@ -596,12 +617,14 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
             time_t progress_timestamp = time(NULL);
             sprintf(info_buffer, "%.2f",  (double)(progress_timestamp - monitoring_info.session.init_timestamp) / 60);
             temp = strlen(info_buffer);
-            memcpy(input_layer + TERM_N_COL*11 + 18 , info_buffer, temp);
+            memcpy(input_layer + TERM_N_COL*12 + 18 , info_buffer, temp);
 
             // Total received packets since the start of session
             sprintf(info_buffer, "%u",  monitoring_info.session.packet_num);
             temp = strlen(info_buffer);
-            memcpy(input_layer + TERM_N_COL*12 + 21 , info_buffer, temp);
+            memcpy(input_layer + TERM_N_COL*13 + 21 , info_buffer, temp);
+
+            update_screen(debug_menu_template, input_layer, NULL);
         }
         else
         {

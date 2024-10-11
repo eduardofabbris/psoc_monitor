@@ -14,7 +14,9 @@
 
 #include "include/log_management.h"
 
-// listen_monitor_device
+// TODO: append_timeout info
+// register both devices connection
+// rst_controller
 
 /*********************************************************
 * Global Variables
@@ -36,7 +38,6 @@ const char *log_file_header_template =
 char user_header_info[100] = {0};
 
 // Debug
-uint8_t rx_byte = 0;
 int psoc6_listening_fsm  = 0;
 
 /*********************************************************
@@ -217,16 +218,11 @@ void create_new_file(log_info_t *log)
     if(ptr != NULL)
     {
         fprintf(ptr, "%s\n", file_header);
-
         fclose(ptr);
     }
 
-    // Clear user input
-    memset(user_header_info, '\0', sizeof(user_header_info));
-
     // Increment file counter
     log->file.cnt += 1;
-
 }
 //****************************************************************************************
 
@@ -320,28 +316,29 @@ void append_session_log(log_info_t log)
 */
 int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
 {
+    // FSM
     enum monitor_menu_st {
             FSM_IDLE_ST,
             FSM_OP_SEL_ST,
             FSM_READ_PCKT_ST
         };
-
     static int fsm_st = FSM_IDLE_ST;
+
+    // Packet
     static uint32_t checksum = 0;
-    static uint8_t rx_pckt[1024] = {0};
     static int byte_cnt = 0;
-
-
+    static uint8_t rx_pckt[1024] = {0};
     static clock_t packet_timer;
 
+    // Flags
     uint8_t proc_pckt_flag  = 0,
             new_buf_flag    = 0,
             append_buf_flag = 0;
 
+    // Buffer
     uint8_t read_buffer[4096] = {0};
     uint8_t *read_ptr = read_buffer;
     int buf_len = 0;
-
 
     // Try to fill input buffer
     buf_len = read_port(psoc_port->device, read_buffer, sizeof(read_buffer));
@@ -389,7 +386,8 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
                     fsm_st = FSM_IDLE_ST;
 
                 }
-                else
+                // Out of sync message
+                else if (*read_ptr != 'D')
                 {
                     fsm_st = FSM_IDLE_ST;
                 }
@@ -419,8 +417,6 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
                     {
                         log->psoc.checksum_error = 1;
                         log->session.checksum_error_cnt += 1;
-                        // Send acknowledge
-                        //write_port(psoc_port->device, (uint8_t *)"HR", 2);
                     }
 
                     proc_pckt_flag = 1;
@@ -451,7 +447,7 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
             }
 
         }
-        // Packet timeout - buffer bad formation
+        // Packet timeout 250ms -> buffer bad formation
         if ( new_buf_flag && time_diff(packet_timer) > 250 )
         {
             log->psoc.timeout_error = 1;
@@ -473,7 +469,8 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
             else
             {
                 create_new_file(log);
-                log->file.buffer_cnt = 0;
+                append_psoc_log(*log);
+                log->file.buffer_cnt = 1;
             }
 
             // Clear buffer
@@ -482,8 +479,8 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
         }
 
     }
+    // Debug
     psoc6_listening_fsm = fsm_st;
-    // process data flag
 
     return new_buf_flag;
 }
@@ -545,7 +542,11 @@ uint8_t listen_monitor_device(serial_port_t *monitor_port)
                     need_rst = 1;
 
                 }
-                fsm_st = FSM_IDLE_ST;
+                // Out of sync message
+                else if (*read_ptr != 'W')
+                {
+                    fsm_st = FSM_IDLE_ST;
+                }
 
                 break;
 
