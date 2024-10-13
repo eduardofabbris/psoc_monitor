@@ -14,10 +14,6 @@
 
 #include "include/log_management.h"
 
-// TODO: append_timeout info
-// register both devices connection
-// rst_controller
-
 /*********************************************************
 * Global Variables
 *********************************************************/
@@ -34,11 +30,46 @@ const char *log_file_header_template =
 ********************************************************************************\n\
 "};
 
+//const char *session_summary_template =
+//{"\
+//*********************************************************************************\n\
+//* @Session summary:                                                             *\n\
+//*  - Start time:             - End time:             - Elapsed minutes:         *\n\
+//*                                                                               *\n\
+//*  - Received buffers:                           - Received packets:            *\n\
+//*                                                                               *\n\
+//*  - Total resets:                                                              *\n\
+//*                                                                               *\n\
+//*  - Packet checksum errors:           - Monitor device lost connection:        *\n\
+//*                                                                               *\n\
+//*********************************************************************************\n\
+//"};
+const char *session_summary_template =
+{"\
+*********************************************************************************\n\
+* @Session summary:                                                             *\n\
+*                                                                               *\n\
+*  - Start time:                                                                *\n\
+*  - End time:                                                                  *\n\
+*  - Elapsed minutes:                                                           *\n\
+*  - Received buffers:                                                          *\n\
+*  - Received packets:                                                          *\n\
+*  - Resets:                                                                    *\n\
+*  - Packet checksum errors:                                                    *\n\
+*  - Monitor device lost connection:                                            *\n\
+*                                                                               *\n\
+*********************************************************************************\n\
+"};
+
+
 // User header info
 char user_header_info[100] = {0};
 
 // Debug
 int psoc6_listening_fsm  = 0;
+uint16_t global_cooldown_lvl;
+clock_t global_rst_cooldown_timer;
+
 
 /*********************************************************
 * Function Definitions
@@ -49,7 +80,7 @@ int psoc6_listening_fsm  = 0;
 * @param  *monitor_port  : monitor device serial port descriptor
 * @retval None
 */
-void dut_rst(serial_port_t *psoc_port, serial_port_t *monitor_port)
+void dut_rst(serial_port_t *monitor_port)
 {
     write_port(monitor_port->device, (uint8_t *)"WR", 2);
     msleep(1);
@@ -79,11 +110,13 @@ void clear_session_log(log_info_t *log)
     log->session.end_timestamp       =
     log->session.buffer_timestamp    = 0;
     log->session.buffer_cnt          =
+    log->session.rst_cnt             =
     log->session.con_rst_cnt         =
     log->session.hang_rst_cnt        =
     log->session.checksum_error_cnt  =
     log->session.packet_num          =
-    log->session.con_lost_monitor    = 0;
+    log->session.con_lost_monitor    =
+    log->session.cooldown_cnt        = 0;
 }
 //****************************************************************************************
 
@@ -164,7 +197,6 @@ static uint8_t process_new_pckt(uint8_t *pckt, log_info_t *log)
         pckt_ptr += 2;
 
     }
-    // TODO: identify duplicate packets
 
     // New buffer
     if ( (sequence + i == MAX_BUFFER_LEN) && ( sequence + i != last_index) )
@@ -209,10 +241,10 @@ void create_new_file(log_info_t *log)
 
     // Copy file name to header
     name_ptr = name_buffer + 3 + strlen(FILE_SEPARATOR);
-    memcpy(file_header + FILE_HEADER_N_COL*1 + 14, name_ptr, strlen(name_ptr));
+    memcpy(file_header + FILE_HEADER_N_COL*1 + 13, name_ptr, strlen(name_ptr));
 
     // Copy additional user info to header
-    memcpy(file_header + FILE_HEADER_N_COL*4 + 13, user_header_info, strlen(user_header_info));
+    memcpy(file_header + FILE_HEADER_N_COL*4 + 9, user_header_info, strlen(user_header_info));
 
     ptr = fopen(name_buffer, "w");
     if(ptr != NULL)
@@ -253,10 +285,10 @@ static void append_psoc_log(log_info_t log)
         fprintf
             (
                 ptr,
-                "received packets: %d, checksum error: %d, timeout error: %d\n",
+                "received packets: %d, checksum error: %s, timeout error: %s\n",
                 log.psoc.rx_packet_cnt,
-                log.psoc.checksum_error,
-                log.psoc.timeout_error
+                (log.psoc.checksum_error) ? "true" : "false",
+                (log.psoc.timeout_error)  ? "true" : "false"
             );
 
         // Payload
@@ -276,13 +308,13 @@ static void append_psoc_log(log_info_t log)
 
 }
 //****************************************************************************************
-
 /**
-* @brief  Append session information to active file
+* @brief  Append a message to active log
+* @param  msg   : message
 * @param  log   : log information from current session
 * @retval None
 */
-void append_session_log(log_info_t log)
+void append_msg_log(char *msg, log_info_t log)
 {
     FILE *ptr;
 
@@ -290,19 +322,168 @@ void append_session_log(log_info_t log)
     if(ptr != NULL)
     {
         // Session status
-        fprintf
-            (
-                ptr,
-                "@S init tm: %lu, end tm: %lu, tot bufs: %u, con rsts: %u, hang rsts: %u, chsum errors: %u, monit con: %u\n",
-                log.session.init_timestamp,
-                log.session.end_timestamp,
-                log.session.buffer_cnt,
-                log.session.con_rst_cnt,
-                log.session.hang_rst_cnt,
-                log.session.checksum_error_cnt,
-                log.session.con_lost_monitor
-            );
+        fprintf (ptr, "%s\n", msg);
 
+        fclose(ptr);
+    }
+}
+//****************************************************************************************
+
+/**
+* @brief  Check serial port status change and append to log
+* @param  *device_id   : device identification to append to file
+* @param  *device_port : device serial port descriptor
+* @param  log          : log information from current session
+* @retval None
+*/
+void status_checker(char *device_id, serial_port_t *device_port, log_info_t *log)
+{
+    char log_buffer[100] = {};
+    time_t timestamp = 0;
+
+    if ( device_port->status != device_port->last_status )
+    {
+        // Rising flag or connection UP
+        timestamp = time(NULL);
+        if (device_port->last_status == 0)
+        {
+            sprintf(log_buffer, "@t (%lu) %s connection UP", timestamp, device_id);
+        }
+        // Falling flag or connection down
+        else
+        {
+            sprintf(log_buffer, "@t (%lu) %s connection DOWN", timestamp, device_id);
+        }
+
+        append_msg_log(log_buffer, *log);
+        device_port->last_status = device_port->status;
+    }
+}
+//**************************************************************************************
+
+/**
+* @brief  Append session summary information to active file
+* @param  rst_req_dsc  : reset request descritor(
+*                        bit0 -> 1 when serial connection request,
+*                        bit7 -> 1 when core hang request)
+* @param  log          : log information from current session
+* @retval rst_ctrl_dsc : reset control descriptor(
+*                        bit0 -> 1 when DUT reset needed,
+*                        bit7 -> 1 when terminate session indication)
+*/
+uint8_t rst_controller(uint8_t rst_req_dsc, log_info_t *log)
+{
+    const uint16_t cooldown_level[] = {0, 5, 10, 30, 60, 120, 180, 300};
+    const uint8_t lvl_n = 7;
+    char log_buffer[100] = {};
+    time_t timestamp = 0;
+
+    static clock_t rst_cooldown_timer = 0;
+    uint8_t rst_ctrl_dsc = 0;
+
+    if ( time_diff(rst_cooldown_timer) > cooldown_level[log->session.cooldown_cnt]*1000 )
+    {
+        // Verify reset requests
+        if (rst_req_dsc)
+        {
+
+            if (log->session.cooldown_cnt < lvl_n)
+            {
+
+                log->session.cooldown_cnt += 1;
+
+                rst_ctrl_dsc += (1 << 0);
+                timestamp = time(NULL);
+                sprintf(log_buffer, "@r (%lu) DUT reset attempt #%d, req dsc: %d", timestamp, log->session.cooldown_cnt, rst_req_dsc);
+                append_msg_log(log_buffer, *log);
+
+                log->session.rst_cnt += 1;
+                // Serial connection lost
+                if ( rst_req_dsc & 1 )
+                {
+                    log->session.con_rst_cnt += 1;
+                }
+                // Core hang
+                if( (rst_req_dsc >> 7) & 1 )
+                {
+                    log->session.hang_rst_cnt += 1;
+                }
+            }
+            // Terminate session flag
+            else
+            {
+                rst_ctrl_dsc += (1 << 7);
+            }
+            // Reset timer
+            rst_cooldown_timer = get_clock();
+        }
+        else
+        {
+            log->session.cooldown_cnt = 0;
+        }
+
+    }
+
+    // Debug
+    global_rst_cooldown_timer = rst_cooldown_timer;
+    global_cooldown_lvl = cooldown_level[log->session.cooldown_cnt];
+
+    return rst_ctrl_dsc;
+}
+//**************************************************************************************
+
+/**
+* @brief  Append session summary information to active file
+* @param  log   : log information from current session
+* @retval None
+*/
+void append_session_log(log_info_t log)
+{
+    FILE *ptr;
+    char file_summary[FILE_SUMMARY_N_COL*FILE_SUMMARY_N_ROW] = {0};
+    char info_buffer[100] = {0};
+
+    // Creates summary from template
+    memcpy(file_summary, session_summary_template  , strlen(session_summary_template ));
+
+    // Start time
+    sprintf(info_buffer, "%lu", log.session.init_timestamp);
+    memcpy(file_summary + FILE_SUMMARY_N_COL*2 + 17, info_buffer, strlen(info_buffer));
+
+    // End time
+    sprintf(info_buffer, "%lu", log.session.end_timestamp);
+    memcpy(file_summary + FILE_SUMMARY_N_COL*2 + 41, info_buffer, strlen(info_buffer));
+
+    // Elapsed minutes
+    double elapsed_min = (double) (log.session.end_timestamp - log.session.init_timestamp) / 60;
+    sprintf(info_buffer, "%.2f", elapsed_min);
+    memcpy(file_summary + FILE_SUMMARY_N_COL*2 + 72, info_buffer, strlen(info_buffer));
+
+    // Received buffers
+    sprintf(info_buffer, "%u", log.session.buffer_cnt);
+    memcpy(file_summary + FILE_SUMMARY_N_COL*4 + 23, info_buffer, strlen(info_buffer));
+
+    // Received packets
+    sprintf(info_buffer, "%u", log.session.packet_num);
+    memcpy(file_summary + FILE_SUMMARY_N_COL*4 + 69, info_buffer, strlen(info_buffer));
+
+    // Reset count
+    sprintf(info_buffer, "%u (core hangs: %u, serial connection: %u)", log.session.rst_cnt, log.session.hang_rst_cnt, log.session.con_rst_cnt);
+    memcpy(file_summary + FILE_SUMMARY_N_COL*6 + 19, info_buffer, strlen(info_buffer));
+
+    // Checksum errors
+    sprintf(info_buffer, "%u", log.session.checksum_error_cnt);
+    memcpy(file_summary + FILE_SUMMARY_N_COL*8 + 29, info_buffer, strlen(info_buffer));
+
+    // Monitor device lost connection flag
+    sprintf(info_buffer, "%s", log.session.con_lost_monitor ? "true" : "false");
+    memcpy(file_summary + FILE_SUMMARY_N_COL*8 + 73, info_buffer, strlen(info_buffer));
+
+
+    ptr = fopen(log.file.name, "a");
+    if(ptr != NULL)
+    {
+        fprintf(ptr, "\n%s", file_summary);
         fclose(ptr);
     }
 }

@@ -1,3 +1,17 @@
+/*******************************************************************************
+* @filename: menu.c
+*
+* @brief:
+*
+*
+*
+*
+********************************************************************************/
+
+/*********************************************************
+* Includes
+*********************************************************/
+
 #include "include/menu.h"
 
 // _____   _____        _____        __       __  __             _ _
@@ -23,6 +37,11 @@
 //⠀⢸⣿⣴⠶⠞⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 //⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 
+/*********************************************************
+* Global Variables
+*********************************************************/
+
+// Templates
 const char *main_menu_template =
 {"\
 +-----------------------------------------------------------------------------------+\
@@ -116,11 +135,11 @@ const char *debug_menu_template =
 |  (Note: needs to be enabled on   |                                                |\
 |         device)                  |  Device Status                                 |\
 |  - Et: Time                      |                                                |\
-|  - Es: Single Upset              |      - PSoc 6: Connected                       |\
-|  - Ea: Latch-up                  |      - Watchdog: Connected                     |\
+|  - Eu: Single Upset              |      - PSoc 6: Connected                       |\
+|  - El: Latch-up                  |      - Watchdog: Connected                     |\
 |  - Eh: Core hang                 |                                                |\
-|  - Eb: Memory                    |  Info                                          |\
-|  - E5: Stop UART                 |                                                |\
+|  - Em: Memory                    |  Info                                          |\
+|  - Es: Stop UART                 |                                                |\
 |                                  |      - Buffers:                                |\
 |  - Elapsed min:                  |      - DUT response countdown:                 |\
 |  - Received pckts:               |      - WD response countdown:                  |\
@@ -129,6 +148,10 @@ const char *debug_menu_template =
 |  In progress                     |                               Back/Exit: [ESC] |\
 +----------------------------------+------------------------------------------------+\
 "};
+
+/*********************************************************
+* Function Definitions
+*********************************************************/
 
 /**
  * @brief  Clear screen and print a new one
@@ -229,7 +252,8 @@ int get_menu_option(char *input_layer)
  */
 int get_keyboard_str(char *input_layer, char *str_buffer, int max_str_len)
 {
-    static int str_len = 0;
+    static int str_len = 0, blink_latch = 0;
+    static clock_t blink_timer = 0;
 
     int ch = 0;
     if(kbhit()){
@@ -272,20 +296,17 @@ int get_keyboard_str(char *input_layer, char *str_buffer, int max_str_len)
     if (input_layer != NULL && str_buffer != NULL)
     {
         memcpy(input_layer, str_buffer, str_len);
-        // TODO: add blink animation
-        memcpy(input_layer + str_len, "_", 1);
+        if ( time_diff(blink_timer) >= 500 )
+        {
+            blink_timer = get_clock();
+            blink_latch = !blink_latch;
+        }
+        if (blink_latch)
+        {
+            memcpy(input_layer + str_len, "_", 1);
+        }
     }
     return -2;
 }
 //****************************************************************************************
 
-///**
-// * @brief  Handle arrow movement and get main menu option
-// * @param  input_layer: screen layer to print over the background
-// * @retval The option selected or -1 otherwise
-// */
-//int manage_main_menu(char *input_layer)
-//
-//{
-//}
-////****************************************************************************************

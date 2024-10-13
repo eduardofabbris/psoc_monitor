@@ -28,8 +28,10 @@
 #define MAX_BUFFER_LEN 1000 // Maximum buffer length
 
 // File
-#define FILE_HEADER_N_COL 80    // Header number of columns
-#define FILE_HEADER_N_ROW 7     // Header number of rows
+#define FILE_HEADER_N_COL 81    // Header number of columns
+#define FILE_HEADER_N_ROW 8     // Header number of rows
+#define FILE_SUMMARY_N_COL 82   // Session summary number of columns
+#define FILE_SUMMARY_N_ROW 12   // Session summary number of rows
 #define MAX_BUFFERS_PER_FILE 10 // Maximum number of buffers per file
 
 /*********************************************************
@@ -37,10 +39,10 @@
 *********************************************************/
 
 // Error descriptor
-// bit 0 -> dx fault: written and read mismatch  fault, i.e. (DAC_out - ADC_in) > TOLERANCE
-// bit 1 -> slope fault: slew-rate fault, i.e. (ADC_in[m + 1] - ADC_in[m]) / dt not bounded by slew-rate limits
-// bit 2 ->
-// bit 3 ->
+// bit 0 -> dx fault: written and read mismatch fault, i.e. (DAC_out - ADC_in) > TOLERANCE
+// bit 1 -> slope fault: slew-rate fault, i.e. (ADC_in[m + 1] - ADC_in[m])  not bounded by slew-rate limits
+// bit 2 -> reserved for future use
+// bit 3 -> reserved for future use
 // bit 4 -> dt fault:
 // bit 5 -> backup time
 // bit 6 -> backup DAC_out
@@ -69,11 +71,13 @@ typedef struct log_struct {
         uint64_t end_timestamp;       // Session end timestamp
         uint64_t buffer_timestamp;    // Last buffer timestamp for date retrieve
         uint32_t buffer_cnt;          // Number of buffers received since the beginning of session
+        uint32_t rst_cnt;             // Total reset counter (alive)
         uint32_t con_rst_cnt;         // Serial connection reset counter (alive)
         uint32_t hang_rst_cnt;        // Core hang reset counter (alive)
         uint32_t checksum_error_cnt;  // Number of checksum errors
         uint32_t packet_num;          // Total number of received packets since the beginning of session
-        uint32_t con_lost_monitor;    // Monitor device serial connection lost counter
+        uint8_t  con_lost_monitor;    // Monitor device serial connection lost flag
+        uint8_t  cooldown_cnt;        // Reset cooldown level counter
     } session;
 
     // File information
@@ -81,7 +85,6 @@ typedef struct log_struct {
         char name[100];       // Active file name
         uint16_t cnt;         // Number of generated files for the current session
         uint32_t buffer_cnt;  // Number of buffers in active file
-
     } file;
 
 } log_info_t;
@@ -93,8 +96,11 @@ typedef struct log_struct {
 uint8_t attempt_connection(serial_port_t *device_port, const char *device_cmd);
 uint8_t listen_monitor_device(serial_port_t *monitor_port);
 int listen_psoc(serial_port_t *psoc_port, log_info_t *log);
-void dut_rst(serial_port_t *psoc_port, serial_port_t *monitor_port);
+void dut_rst(serial_port_t *monitor_port);
+void status_checker(char *device_id, serial_port_t *device_port, log_info_t *log);
+uint8_t rst_controller(uint8_t rst_req_dsc, log_info_t *log);
 
+void append_msg_log(char *msg, log_info_t log);
 void append_session_log(log_info_t log);
 void create_new_file(log_info_t *log);
 void clear_psoc_log(log_info_t *log);
