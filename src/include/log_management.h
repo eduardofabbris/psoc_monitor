@@ -31,7 +31,7 @@
 #define FILE_HEADER_N_COL 81    // Header number of columns
 #define FILE_HEADER_N_ROW 8     // Header number of rows
 #define FILE_SUMMARY_N_COL 82   // Session summary number of columns
-#define FILE_SUMMARY_N_ROW 12   // Session summary number of rows
+#define FILE_SUMMARY_N_ROW 14   // Session summary number of rows
 #define MAX_BUFFERS_PER_FILE 10 // Maximum number of buffers per file
 
 /*********************************************************

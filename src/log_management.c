@@ -30,20 +30,6 @@ const char *log_file_header_template =
 ********************************************************************************\n\
 "};
 
-//const char *session_summary_template =
-//{"\
-//*********************************************************************************\n\
-//* @Session summary:                                                             *\n\
-//*  - Start time:             - End time:             - Elapsed minutes:         *\n\
-//*                                                                               *\n\
-//*  - Received buffers:                           - Received packets:            *\n\
-//*                                                                               *\n\
-//*  - Total resets:                                                              *\n\
-//*                                                                               *\n\
-//*  - Packet checksum errors:           - Monitor device lost connection:        *\n\
-//*                                                                               *\n\
-//*********************************************************************************\n\
-//"};
 const char *session_summary_template =
 {"\
 *********************************************************************************\n\
@@ -448,36 +434,36 @@ void append_session_log(log_info_t log)
 
     // Start time
     sprintf(info_buffer, "%lu", log.session.init_timestamp);
-    memcpy(file_summary + FILE_SUMMARY_N_COL*2 + 17, info_buffer, strlen(info_buffer));
+    memcpy(file_summary + FILE_SUMMARY_N_COL*3 + 17, info_buffer, strlen(info_buffer));
 
     // End time
     sprintf(info_buffer, "%lu", log.session.end_timestamp);
-    memcpy(file_summary + FILE_SUMMARY_N_COL*2 + 41, info_buffer, strlen(info_buffer));
+    memcpy(file_summary + FILE_SUMMARY_N_COL*4 + 15, info_buffer, strlen(info_buffer));
 
     // Elapsed minutes
     double elapsed_min = (double) (log.session.end_timestamp - log.session.init_timestamp) / 60;
     sprintf(info_buffer, "%.2f", elapsed_min);
-    memcpy(file_summary + FILE_SUMMARY_N_COL*2 + 72, info_buffer, strlen(info_buffer));
+    memcpy(file_summary + FILE_SUMMARY_N_COL*5 + 22, info_buffer, strlen(info_buffer));
 
     // Received buffers
     sprintf(info_buffer, "%u", log.session.buffer_cnt);
-    memcpy(file_summary + FILE_SUMMARY_N_COL*4 + 23, info_buffer, strlen(info_buffer));
+    memcpy(file_summary + FILE_SUMMARY_N_COL*6 + 23, info_buffer, strlen(info_buffer));
 
     // Received packets
     sprintf(info_buffer, "%u", log.session.packet_num);
-    memcpy(file_summary + FILE_SUMMARY_N_COL*4 + 69, info_buffer, strlen(info_buffer));
+    memcpy(file_summary + FILE_SUMMARY_N_COL*7 + 23, info_buffer, strlen(info_buffer));
 
     // Reset count
     sprintf(info_buffer, "%u (core hangs: %u, serial connection: %u)", log.session.rst_cnt, log.session.hang_rst_cnt, log.session.con_rst_cnt);
-    memcpy(file_summary + FILE_SUMMARY_N_COL*6 + 19, info_buffer, strlen(info_buffer));
+    memcpy(file_summary + FILE_SUMMARY_N_COL*8 + 13, info_buffer, strlen(info_buffer));
 
     // Checksum errors
     sprintf(info_buffer, "%u", log.session.checksum_error_cnt);
-    memcpy(file_summary + FILE_SUMMARY_N_COL*8 + 29, info_buffer, strlen(info_buffer));
+    memcpy(file_summary + FILE_SUMMARY_N_COL*9 + 29, info_buffer, strlen(info_buffer));
 
     // Monitor device lost connection flag
     sprintf(info_buffer, "%s", log.session.con_lost_monitor ? "true" : "false");
-    memcpy(file_summary + FILE_SUMMARY_N_COL*8 + 73, info_buffer, strlen(info_buffer));
+    memcpy(file_summary + FILE_SUMMARY_N_COL*10 + 37, info_buffer, strlen(info_buffer));
 
 
     ptr = fopen(log.file.name, "a");
