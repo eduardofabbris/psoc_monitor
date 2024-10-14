@@ -7,15 +7,17 @@
 
 static void print_error(const char * context)
 {
-  DWORD error_code = GetLastError();
-  char buffer[256];
-  DWORD size = FormatMessageA(
-    FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_MAX_WIDTH_MASK,
-    NULL, error_code, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
-    buffer, sizeof(buffer), NULL);
-  if (size == 0) { buffer[0] = 0; }
   if (DEBUG_SERIAL_EN)
   {
+      char buffer[256];
+      DWORD error_code = GetLastError();
+      DWORD size = FormatMessageA
+          (
+            FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_MAX_WIDTH_MASK,
+            NULL, error_code, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+            buffer, sizeof(buffer), NULL
+          );
+      if (size == 0) { buffer[0] = 0; }
     fprintf(stderr, "%s: %s\n", context, buffer);
   }
   else

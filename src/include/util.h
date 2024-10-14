@@ -82,13 +82,12 @@ void debug_print(const char *msg);
  *********************************************/
 
 //#include <fcntl.h> // Contains file controls like O_RDWR
-//#include <errno.h> // Error integer and strerror() function
 //#include <sys/file.h>
 
 #include <unistd.h>
 #include <termios.h>
 #include <sys/select.h>
-#include <stdio_ext.h> // Add __fpurge TODO: do i need?
+//#include <stdio_ext.h> // Add __fpurge TODO: do i need?
 
 /**********************************************
  * LINUX Defines

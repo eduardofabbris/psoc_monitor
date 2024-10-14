@@ -8,7 +8,9 @@ static void print_error(const char *msg)
 {
   if (DEBUG_SERIAL_EN)
   {
-    printf("%s", msg); 
+    int error_code = errno;
+
+    printf("(%d)%s: %s", error_code, strerror(error_code), msg);
     fflush(stdout);
     char dummy_ch;
     while(!read(STDIN_FILENO, &dummy_ch, 1));
@@ -81,7 +83,7 @@ int _open_serial_port(const char * device, uint32_t baud_rate)
 
   // timeout in deciseconds
   options.c_cc[VTIME] = 0;
-  // minimum of number input read.
+  //// minimum of number input read.
   options.c_cc[VMIN] = 0;
 
   // This code only supports certain standard baud rates. Supporting

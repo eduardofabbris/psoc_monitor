@@ -36,11 +36,6 @@ typedef struct serial_port_struct{
 #define PSOC6_CONNECTION_TIMEOUT 10   // Serial connection timeout in seconds
 #define MONITOR_CONNECTION_TIMEOUT 10 // Serial connection timeout in seconds
 
-
-
-
-//static void print_error(const char * context);
-
 #ifdef _WIN32
 // @windows
 
@@ -72,7 +67,8 @@ SSIZE_T read_port(HANDLE port, uint8_t * buffer, size_t size);
 * LINUX Includes
 **********************************************/
 
-#include <fcntl.h>
+#include <fcntl.h> // Contains file controls like O_RDWR
+#include <errno.h> // Error integer and strerror() function
 
 
 /**********************************************

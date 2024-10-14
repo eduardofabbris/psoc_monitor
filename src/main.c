@@ -182,7 +182,10 @@ int main(){
 
                 // Cancel
                 if (str_len == -1)
+                {
                     fsm_st = FSM_IDLE_ST;
+                    status_prompt = NULL;
+                }
                 // Verify serial port
                 else if (str_len > 0)
                 {
@@ -269,6 +272,7 @@ int main(){
                     // Close open ports
                     close(psoc_port.device);
 
+                    status_prompt = NULL;
                     fsm_st = FSM_IDLE_ST;
                 }
                 // Verify port
@@ -362,6 +366,7 @@ int main(){
                     close(psoc_port.device);
                     close(monitor_port.device);
 
+                    status_prompt = NULL;
                     fsm_st = FSM_IDLE_ST;
                 }
                 // Creates file with timestamp and begin monitoring
@@ -438,12 +443,14 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
     // Timers and counters
     double  psoc_timer,
             monitor_timer;
-    time_t  temp_timestamp = 0;
-    clock_t spinner_timer  = 0;
+    time_t  temp_timestamp   = 0;
+    clock_t spinner_timer    = 0,
+            new_buffer_timer = 0;
 
     // Flags
     uint8_t new_buf_flag  = 0,
             dut_hang_flag = 0,
+            dut_hang_reg  = 0,
             response      = 1;
     uint8_t reset_request = 0,
             rst_ctrl_dsc  = 0;
@@ -472,10 +479,26 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
         new_buf_flag  = listen_psoc(psoc_port, &monitoring_info);
         dut_hang_flag = listen_monitor_device(monitor_port);
 
-        // DUT core hang timeout
-        if ( dut_hang_flag && new_buf_flag == 0 )
+        // New buffer reset cooldown
+        if ( dut_hang_flag != dut_hang_reg )
+        {
+            // Rising edge
+            if (dut_hang_flag == 1)
+            {
+                new_buffer_timer = get_clock();
+            }
+            dut_hang_reg = dut_hang_flag;
+        }
+
+        // DUT core hang timeout reset request
+		// Before resetting device, verify if possible hang was due to new buffer transmission
+        if ( dut_hang_flag && new_buf_flag == 0 && time_diff(new_buffer_timer) > 600 )
         {
             reset_request |= (1 << 7);
+        }
+        else
+        {
+            reset_request &= ~(1 << 7);
         }
 
         // Verify PSoC UART timeout
@@ -483,12 +506,18 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
         if ( psoc_timer > PSOC6_CONNECTION_TIMEOUT*1000 )
         {
             psoc_port->status = 0;
-
             // Update screen device status
             temp = strlen(lost_connection_status_template);
             memcpy(input_layer + TERM_N_COL*6 + 52, lost_connection_status_template, temp);
-
+        }
+        // Serial port timeout reset request
+        if (psoc_port->status == 0)
+        {
             reset_request |= (1 << 0);
+        }
+        else
+        {
+            reset_request &= ~(1 << 0);
         }
         status_checker("psoc6", psoc_port, &monitoring_info);
 
@@ -497,7 +526,6 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
         if (monitor_timer > MONITOR_CONNECTION_TIMEOUT*1000)
         {
             monitor_port->status = 0;
-
             // Update screen device status
             temp = strlen(lost_connection_status_template);
             memcpy(input_layer + TERM_N_COL*7 + 54, lost_connection_status_template, temp);

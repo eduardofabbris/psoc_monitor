@@ -499,8 +499,8 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
 
     // Flags
     uint8_t proc_pckt_flag  = 0,
-            new_buf_flag    = 0,
             append_buf_flag = 0;
+    static uint8_t new_buf_flag = 0;
 
     // Buffer
     uint8_t read_buffer[4096] = {0};
@@ -548,6 +548,7 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
                 // Alive signal received
                 else if (*read_ptr == 'A')
                 {
+                    new_buf_flag = 0;
                     psoc_port->status = 1;
                     psoc_port->timeout_cnt = get_clock();
                     fsm_st = FSM_IDLE_ST;
@@ -617,6 +618,8 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
         // Packet timeout 250ms -> buffer bad formation
         if ( new_buf_flag && time_diff(packet_timer) > 250 )
         {
+            fsm_st = FSM_IDLE_ST;
+            log->session.buffer_cnt++;
             log->psoc.timeout_error = 1;
             append_buf_flag = 1;
             new_buf_flag = 0;
@@ -667,7 +670,7 @@ uint8_t listen_monitor_device(serial_port_t *monitor_port)
 
     static int fsm_st = FSM_IDLE_ST;
 
-    uint8_t need_rst = 0;
+    static uint8_t need_rst = 0;
     uint8_t read_buffer[4096] = {0};
     uint8_t *read_ptr = read_buffer;
     int buf_len = 0;
@@ -699,6 +702,8 @@ uint8_t listen_monitor_device(serial_port_t *monitor_port)
                 {
                     monitor_port->status = 1;
                     monitor_port->timeout_cnt = get_clock();
+
+                    need_rst = 0;
                 }
                 // Core hang timeout indication
                 else if (*read_ptr == 'T')

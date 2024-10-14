@@ -49,4 +49,3 @@ void update_screen(const char *background, char *input_layer, char *ascii_art[])
 int get_menu_option(char *input_layer);
 int get_keyboard_str(char *input_layer, char *str_buffer, int max_str_len);
 
-
