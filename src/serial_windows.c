@@ -26,9 +26,14 @@ static void print_error(const char * context)
   }
 }
 
+HANDLE open_serial_port(const char * device, int name_len, uint32_t baud_rate)
+{
+  return _open_serial_port(device, baud_rate);
+}
+
 // Opens the specified serial port, configures its timeouts, and sets its
 // baud rate.  Returns a handle on success, or INVALID_HANDLE_VALUE on failure.
-HANDLE open_serial_port(const char * device, uint32_t baud_rate)
+HANDLE _open_serial_port(const char * device, uint32_t baud_rate)
 {
   HANDLE port = CreateFileA(device, GENERIC_READ | GENERIC_WRITE, 0, NULL,
     OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);

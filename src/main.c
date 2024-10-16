@@ -64,7 +64,7 @@ static void init_terminal()
 {
     if(WINDOWS_EN)
     {
-        system("MODE con cols=86 lines=18");
+        //system("MODE con cols=86 lines=18");
     }
     else
     {
@@ -85,7 +85,7 @@ static void reset_terminal()
     if(WINDOWS_EN)
     {
         //system("MODE con cols=80 lines=22");
-        system("MODE con cols=120 lines=30");
+        //system("MODE con cols=120 lines=30");
     }
     else
     {
@@ -196,6 +196,7 @@ int main(){
                     psoc_port.device = open_serial_port(psoc_port.name, psoc_port.name_len, 115200);
 
                     // Verify port
+                    //if (psoc_port.device != INVALID_HANDLE_VALUE)
                     if (psoc_port.device > 0)
                     {
                         // Verify device
@@ -225,7 +226,7 @@ int main(){
                 if (str_len == -1 )
                 {
                     // Close open ports
-                    close(psoc_port.device);
+                    close_serial_port(psoc_port.device);
                     status_prompt = NULL;
                     fsm_st = FSM_GET_PSOC_PORT_ST;
                 }
@@ -270,7 +271,7 @@ int main(){
                 if (str_len == -1)
                 {
                     // Close open ports
-                    close(psoc_port.device);
+                    close_serial_port(psoc_port.device);
 
                     status_prompt = NULL;
                     fsm_st = FSM_IDLE_ST;
@@ -286,6 +287,7 @@ int main(){
                         // Attempt connection
                         monitor_port.device = open_serial_port(monitor_port.name, monitor_port.name_len, 115200);
 
+                        //if (monitor_port.device != INVALID_HANDLE_VALUE)
                         if (monitor_port.device > 0)
                         {
                             // Verify device
@@ -323,7 +325,7 @@ int main(){
                 if (str_len == -1 )
                 {
                     // Close open ports
-                    close(monitor_port.device);
+                    close_serial_port(monitor_port.device);
                     status_prompt = NULL;
                     fsm_st = FSM_GET_MONITOR_DEVICE_PORT_ST;
                 }
@@ -331,6 +333,7 @@ int main(){
                 {
                     if ( attempt_status == 0 && time_diff(attempt_connection_timer) < MONITOR_CONNECTION_TIMEOUT*1000 )
                     {
+                        // TODO: if cable not connected in DUT, it only sends WT
                         attempt_status = attempt_connection(&monitor_port, "WA");
                     }
                     else if (attempt_status)
@@ -363,8 +366,8 @@ int main(){
                 if (str_len == -1)
                 {
                     // Close open ports
-                    close(psoc_port.device);
-                    close(monitor_port.device);
+                    close_serial_port(psoc_port.device);
+                    close_serial_port(monitor_port.device);
 
                     status_prompt = NULL;
                     fsm_st = FSM_IDLE_ST;
@@ -390,8 +393,8 @@ int main(){
                     }
 
                     // Close open ports
-                    close(psoc_port.device);
-                    close(monitor_port.device);
+                    close_serial_port(psoc_port.device);
+                    close_serial_port(monitor_port.device);
 
                     fsm_st = FSM_IDLE_ST;
                 }
@@ -405,6 +408,7 @@ int main(){
         if (background != NULL)
         {
             update_screen(background, input_layer, NULL);
+            //while(1);
             msleep(10);
         }
     }
@@ -556,8 +560,8 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
 
         if(kbhit())
         {
-            // read last character in case ANSI escape sequences
-            while(read(STDIN_FILENO, &user_input, 1) > 0){}
+            // Read a key form keyboard
+            user_input = get_char();
 
             switch (fsm_st)
             {

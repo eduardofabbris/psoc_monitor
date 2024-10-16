@@ -56,7 +56,8 @@ typedef struct serial_port_struct{
 * WINDOWS Prototypes
 **********************************************/
 
-HANDLE open_serial_port(const char * device, uint32_t baud_rate);
+HANDLE open_serial_port(const char * device, int name_len, uint32_t baud_rate);
+HANDLE _open_serial_port(const char * device, uint32_t baud_rate);
 int write_port(HANDLE port, uint8_t * buffer, size_t size);
 SSIZE_T read_port(HANDLE port, uint8_t * buffer, size_t size);
 

@@ -42,6 +42,8 @@ void gotoxy(int x, int y);
 void hide_cursor(int state);
 void debug_print(const char *msg);
 
+char get_char();
+
 #ifdef _WIN32
 // @windows
 
@@ -94,6 +96,7 @@ void debug_print(const char *msg);
  *********************************************/
 
 // Miscellaneous
+#define INVALID_HANDLE_VALUE -1
 #define FILE_SEPARATOR "/"
 #define msleep(a) for(int ii = 0; ii < 1000; ii++) {usleep(a);}
 #define close_serial_port(a) close(a)

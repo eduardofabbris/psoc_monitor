@@ -163,7 +163,7 @@ void update_screen(const char *background, char *input_layer, char *ascii_art[])
 {
     char bck_ch, input_ch;
 
-    clrscr();
+    //clrscr();
     for(int i = 0; i < TERM_N_ROW; i++)
     {
         for(int j = 0; j < TERM_N_COL; j++)
@@ -174,7 +174,8 @@ void update_screen(const char *background, char *input_layer, char *ascii_art[])
             else
             {
                 bck_ch = background[TERM_N_COL*i + j];
-                if (bck_ch != ' ' && bck_ch != '\0')
+                //if (bck_ch != ' ' && bck_ch != '\0')
+                if (bck_ch != '\0')
                     gotoxy(i, j), printf("%c", bck_ch);
             }
         }
@@ -211,8 +212,8 @@ int get_menu_option(char *input_layer)
 
     int ch = 0;
     if(kbhit()){
-        // read last character in case ANSI escape sequences
-        while(read(STDIN_FILENO, &ch, 1) > 0);
+        // Read a key form keyboard
+        ch = get_char();
 
         switch(ch)
         {
@@ -257,8 +258,8 @@ int get_keyboard_str(char *input_layer, char *str_buffer, int max_str_len)
 
     int ch = 0;
     if(kbhit()){
-        // read last character in case ANSI escape sequences
-        while(read(STDIN_FILENO, &ch, 1) > 0);
+        // Read a key form keyboard
+        ch = get_char();
 
         switch(ch)
         {

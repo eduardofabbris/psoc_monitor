@@ -14,7 +14,7 @@ void debug_print(const char *msg)
     printf("Debug output: %s", msg); 
     fflush(stdout);
     char dummy_ch;
-    while(!read(STDIN_FILENO, &dummy_ch, 1));
+    //while(!read(STDIN_FILENO, &dummy_ch, 1));
 }
 
 /**
@@ -75,8 +75,8 @@ long int get_clock()
 void gotoxy(int x, int y)
 {
     COORD coord = {0, 0};
-    coord.X = x;
-    coord.Y = y;
+    coord.X = y;
+    coord.Y = x;
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 //****************************************************************************************
@@ -92,7 +92,29 @@ void hide_cursor(int state)
 }
 //****************************************************************************************
 
+/**
+ * @brief  Read a pressed key from keyboard
+ * @retval The key pressed
+ */
+char get_char()
+{
+    return getch();
+}
+//****************************************************************************************
 #else // @linux
+
+/**
+ * @brief  Read a pressed key from keyboard
+ * @retval The key pressed
+ */
+char get_char()
+{
+    char ch = 0;
+    // read last character in case ANSI escape sequences
+    while(read(STDIN_FILENO, &ch, 1) > 0);
+    return ch;
+}
+//**************************************************************************************
 
 /**
  * @brief  Get time in microseconds
