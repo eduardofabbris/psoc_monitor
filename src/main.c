@@ -92,8 +92,6 @@ static void reset_terminal()
     {
         set_nonblock(0);
         hide_cursor(0);
-
-        //system("echo -ne '\e[8;22;80t'");
         system("echo -ne '\e[8;24;80t'");
 
     }
