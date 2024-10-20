@@ -1,11 +1,11 @@
 /*******************************************************************************
 * @filename: main.c
+* @brief: FSMs for main menu and monitoring logic
 *
-* @brief:
+* MIT License
 *
-*
-*
-*
+* Copyright (c) 2024 eduardofabbris
+* See the LICENSE file for details.
 ********************************************************************************/
 
 /*********************************************************
@@ -16,7 +16,6 @@
 #include "include/menu.h"
 #include "include/serial.h"
 #include "include/log_management.h"
-
 
 /*********************************************************
 * Function Prototypes

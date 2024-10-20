@@ -1,11 +1,12 @@
-/**
- ******************************************************************************
- * @file    util.h
- * @date    21-July-2024
- * @brief   Miscellaneous functions for PSoc Monitor
- *
- ******************************************************************************
- */
+/*******************************************************************************
+* @filename: util.c
+* @brief: Miscellaneous functions for PSoc Monitor
+*
+* MIT License
+*
+* Copyright (c) 2024 eduardofabbris
+* See the LICENSE file for details.
+********************************************************************************/
 #include "include/util.h"
 
 /**
@@ -16,7 +17,6 @@
  */
 double time_diff(uint64_t start_t)
 {
-    //return (((double) (get_clock() - start_t)) / (1 + (CLOCKS_PER_SEC - 1)*WINDOWS_EN)) / 1000;
     return ((double) (get_clock() - start_t)) / 1000;
 }
 //**************************************************************************************

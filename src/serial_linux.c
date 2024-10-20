@@ -1,5 +1,10 @@
-// Source code: https://www.pololu.com/docs/0J73/15.5
-// Uses POSIX serial port functions to send and receive data
+/*******************************************************************************
+* @filename: serial_linux.c
+* @brief: Uses POSIX serial port functions to send and receive data
+*
+* Source code: https://www.pololu.com/docs/0J73/15.5
+*
+********************************************************************************/
 #include "include/serial.h"
 
 #ifndef _WIN32 // @linux
@@ -20,6 +25,7 @@ static void print_error(const char *msg)
     (void) msg;
   }
 }
+//**************************************************************************************
 
 // Replace '/' character with "//" and calls _open_serial_port
 int open_serial_port(char * port_name, int name_len, uint32_t baud_rate)
@@ -45,6 +51,7 @@ int open_serial_port(char * port_name, int name_len, uint32_t baud_rate)
     }
     return _open_serial_port(name_buf, baud_rate);
 }
+//**************************************************************************************
 
 // Opens the specified serial port, sets it up for binary communication,
 // configures its read timeouts, and sets its baud rate.
@@ -112,6 +119,7 @@ int _open_serial_port(const char * device, uint32_t baud_rate)
 
   return fd;
 }
+//**************************************************************************************
 
 // Writes bytes to the serial port, returning 0 on success and -1 on failure.
 int write_port(int fd, uint8_t * buffer, size_t size)
@@ -124,6 +132,7 @@ int write_port(int fd, uint8_t * buffer, size_t size)
   }
   return 0;
 }
+//**************************************************************************************
 
 // Reads bytes from the serial port.
 // Returns after all the desired bytes have been read, or if there is a
@@ -150,5 +159,6 @@ ssize_t read_port(int fd, uint8_t * buffer, size_t size)
   }
   return received;
 }
+//**************************************************************************************
 
 #endif

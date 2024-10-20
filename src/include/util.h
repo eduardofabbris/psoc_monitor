@@ -1,11 +1,11 @@
 /*******************************************************************************
 * @filename: util.h
+* @brief: util.c header
+
+* MIT License
 *
-* @brief:
-*
-*
-*
-*
+* Copyright (c) 2024 eduardofabbris
+* See the LICENSE file for details.
 ********************************************************************************/
 #ifndef UTIL_H
 #define UTIL_H

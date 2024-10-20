@@ -1,3 +1,12 @@
+/*******************************************************************************
+* @filename: menu.h
+* @brief: menu.c header
+*
+* MIT License
+*
+* Copyright (c) 2024 eduardofabbris
+* See the LICENSE file for details.
+********************************************************************************/
 #pragma once
 
 /**********************************************
@@ -30,7 +39,7 @@
 
 // Monitor menu constants
 #define STATUS_PROMPT_OFFSET        TERM_N_COL*(TERM_N_ROW - 2) + 3
-#define SPINNER_ANIMATION_LEN       4 
+#define SPINNER_ANIMATION_LEN       4
 
 
 #define CANVAS_COLUMNS 80

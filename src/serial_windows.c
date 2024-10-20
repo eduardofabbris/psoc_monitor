@@ -1,5 +1,10 @@
-// Source code: https://www.pololu.com/docs/0J73/15.6
-// Uses Windows API serial port functions to send and receive data
+/*******************************************************************************
+* @filename: serial_windows.c
+* @brief: Uses Windows API serial port functions to send and receive data
+*
+* Source code: https://www.pololu.com/docs/0J73/15.6
+*
+********************************************************************************/
 
 #include "include/serial.h"
 
@@ -28,6 +33,7 @@ static void print_error(const char * context)
     (void) context;
   }
 }
+//**************************************************************************************
 
 // COM ports higher than COM9 need the \\.\ prefix
 // which tells Windows to treat it as a device name rather than as a regular string, and is written as
@@ -43,6 +49,7 @@ HANDLE open_serial_port(const char * device, int name_len, uint32_t baud_rate)
 
   return _open_serial_port(name_buf, baud_rate);
 }
+//**************************************************************************************
 
 // Opens the specified serial port, configures its timeouts, and sets its
 // baud rate.  Returns a handle on success, or INVALID_HANDLE_VALUE on failure.
@@ -98,6 +105,7 @@ HANDLE _open_serial_port(const char * device, uint32_t baud_rate)
 
   return port;
 }
+//**************************************************************************************
 
 // Writes bytes to the serial port, returning 0 on success and -1 on failure.
 int write_port(HANDLE port, uint8_t * buffer, size_t size)
@@ -116,6 +124,7 @@ int write_port(HANDLE port, uint8_t * buffer, size_t size)
   }
   return 0;
 }
+//**************************************************************************************
 
 // Reads bytes from the serial port.
 // Returns after all the desired bytes have been read, or if there is a
@@ -133,5 +142,6 @@ SSIZE_T read_port(HANDLE port, uint8_t * buffer, size_t size)
   }
   return received;
 }
+//**************************************************************************************
 
 #endif

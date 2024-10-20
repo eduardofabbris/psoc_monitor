@@ -1,11 +1,11 @@
 /*******************************************************************************
 * @filename: log_management.h
+* @brief: log_management.c header
 *
-* @brief:
+* MIT License
 *
-*
-*
-*
+* Copyright (c) 2024 eduardofabbris
+* See the LICENSE file for details.
 ********************************************************************************/
 #pragma once
 

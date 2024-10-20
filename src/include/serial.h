@@ -1,9 +1,11 @@
 /*******************************************************************************
 * @filename: serial.h
+* @brief: serial_windows and serial_linux.c header
 *
-* @brief:
+* MIT License
 *
-*
+* Copyright (c) 2024 eduardofabbris
+* See the LICENSE file for details.
 ********************************************************************************/
 #ifndef SERIAL_H
 #define SERIAL_H

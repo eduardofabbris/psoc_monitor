@@ -1,11 +1,12 @@
 /*******************************************************************************
 * @filename: log_management.c
+* @brief: Log related functions for reading a new buffer package and storing it
+*         in a file
 *
-* @brief:
+* MIT License
 *
-*
-*
-*
+* Copyright (c) 2024 eduardofabbris
+* See the LICENSE file for details.
 ********************************************************************************/
 
 /*********************************************************
@@ -47,7 +48,6 @@ const char *session_summary_template =
 *********************************************************************************\n\
 "};
 
-
 // User header info
 char user_header_info[100] = {0};
 
@@ -55,7 +55,6 @@ char user_header_info[100] = {0};
 int psoc6_listening_fsm  = 0;
 uint16_t global_cooldown_lvl;
 uint64_t global_rst_cooldown_timer;
-
 
 /*********************************************************
 * Function Definitions
@@ -130,7 +129,6 @@ void clear_psoc_log(log_info_t *log)
 }
 //****************************************************************************************
 
-
 /**
 * @brief  Convert a sequence of bytes in a integer word
 * @param  data     : bytes sequence big-endian
@@ -195,7 +193,6 @@ static uint8_t process_new_pckt(uint8_t *pckt, log_info_t *log)
     return new_buffer_flag;
 }
 //****************************************************************************************
-
 
 /**
 * @brief  Creates a new file
@@ -712,7 +709,6 @@ uint8_t listen_monitor_device(serial_port_t *monitor_port)
                     monitor_port->timeout_cnt = get_clock();
 
                     need_rst = 1;
-
                 }
                 // Out of sync message
                 else if (*read_ptr != 'W')
@@ -803,3 +799,4 @@ uint8_t attempt_connection(serial_port_t *device_port, const char *device_cmd)
     return received_cmd;
 }
 //****************************************************************************************
+
