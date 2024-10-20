@@ -33,14 +33,14 @@
  *********************************************/
 
 // Time
-long int get_clock();
-double time_diff(clock_t start_t);
+long long get_clock();
+double time_diff(uint64_t start_t);
 char *get_timeinfo(time_t timestamp);
 
 // Terminal
 void gotoxy(int x, int y);
 void hide_cursor(int state);
-void debug_print(const char *msg);
+//void debug_print(const char *msg);
 
 char get_char();
 

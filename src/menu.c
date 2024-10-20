@@ -87,7 +87,7 @@ const char *prompt_menu_template =
 "};
 
 const char *monitor_ascii_art[] = {
-"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+//"                                   ",
 "⠀⠀⠀⣸⣏⠛⠻⠿⣿⣶⣤⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
 "⠀⠀⠀⣿⣿⣿⣷⣦⣤⣈⠙⠛⠿⣿⣷⣶⣤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
 "⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣶⣦⣄⣈⠙⠻⠿⣿⣷⣶⣤⣀⡀⠀⠀⠀⠀⠀",
@@ -155,34 +155,55 @@ const char *debug_menu_template =
 
 /**
  * @brief  Clear screen and print a new one
- * @param  background: screen template to print as background
- * @param  input_layer: screen layer to print over the background
+ * @param  background: template to print as background
+ * @param  input_layer: layer to print over the background
  * @retval None
  */
 void update_screen(const char *background, char *input_layer, char *ascii_art[])
 {
-    char bck_ch, input_ch;
+    static char clear_layer[TERM_N_COL*TERM_N_ROW] = {'\0'};
+    static char *last_background = NULL;
+    char bck_ch, input_ch, clr_ch, output_ch;
 
     //clrscr();
     for(int i = 0; i < TERM_N_ROW; i++)
     {
         for(int j = 0; j < TERM_N_COL; j++)
         {
+            output_ch = '\0';
+            clr_ch   = clear_layer[TERM_N_COL*i + j];
             input_ch = input_layer[TERM_N_COL*i + j];
+            bck_ch   = background[TERM_N_COL*i + j];
+
+            // Print the top layer of the scene
             if (input_ch != '\0')
-                gotoxy(i, j), printf("%c", input_ch);
-            else
             {
-                bck_ch = background[TERM_N_COL*i + j];
-                //if (bck_ch != ' ' && bck_ch != '\0')
-                if (bck_ch != '\0')
-                    gotoxy(i, j), printf("%c", bck_ch);
+                output_ch = input_ch;
+                clear_layer[TERM_N_COL*i + j] = '!';
             }
+            // Clear last character printed in this position by printing the background
+            else if (clr_ch != '\0')
+            {
+                output_ch = bck_ch;
+                clear_layer[TERM_N_COL*i + j] = '\0';        
+            }          
+            // Force new background print if the scene has changed      
+            else if(last_background != background)
+            {
+                output_ch = bck_ch;
+            }
+            // Output character
+            if (output_ch != '\0')
+            {
+                gotoxy(i, j), printf("%c", output_ch);  
+            }            
         }
     }
 
+    last_background = (char *) background;
+    //memset(clear_layer, '\0', TERM_N_ROW*TERM_N_COL);
     // Print ASCII art
-    if (ascii_art != NULL)
+    /*if (ascii_art != NULL)
     {
         gotoxy(1, 3);
         for (int i = 0; **(ascii_art + i) ; i++)
@@ -190,11 +211,11 @@ void update_screen(const char *background, char *input_layer, char *ascii_art[])
             gotoxy(1 + i, 3);
             printf("%s", ascii_art[i]);
         }
-    }
+    }*/
 
     // force terminal output update
     fflush(stdout);
-    // clear input layer
+    // Reset input layer
     memset(input_layer, '\0', TERM_N_ROW*TERM_N_COL);
 }
 //****************************************************************************************
@@ -254,7 +275,7 @@ int get_menu_option(char *input_layer)
 int get_keyboard_str(char *input_layer, char *str_buffer, int max_str_len)
 {
     static int str_len = 0, blink_latch = 0;
-    static clock_t blink_timer = 0;
+    static uint64_t blink_timer = 0;
 
     int ch = 0;
     if(kbhit()){

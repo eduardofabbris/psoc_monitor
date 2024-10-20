@@ -18,7 +18,10 @@ static void print_error(const char * context)
             buffer, sizeof(buffer), NULL
           );
       if (size == 0) { buffer[0] = 0; }
-    fprintf(stderr, "%s: %s\n", context, buffer);
+      gotoxy(0, 0);
+      fprintf(stderr, "%s: %s\n", context, buffer);
+      fflush(stdout);
+      getch();
   }
   else
   {
@@ -26,9 +29,18 @@ static void print_error(const char * context)
   }
 }
 
+// COM ports higher than COM9 need the \\.\ prefix 
+// which tells Windows to treat it as a device name rather than as a regular string, and is written as
+// "\\\\.\\" in C because we need to escape the backslashes.
 HANDLE open_serial_port(const char * device, int name_len, uint32_t baud_rate)
 {
-  return _open_serial_port(device, baud_rate);
+  char name_buf[100] = {0};
+  const char *port_prefix = "\\\\.\\";
+
+  strcpy(name_buf, port_prefix);
+  strcpy(name_buf + strlen(port_prefix), device);
+
+  return _open_serial_port(name_buf, baud_rate);
 }
 
 // Opens the specified serial port, configures its timeouts, and sets its
@@ -52,12 +64,12 @@ HANDLE _open_serial_port(const char * device, uint32_t baud_rate)
     return INVALID_HANDLE_VALUE;
   }
 
-  // Configure read and write operations to time out after 100 ms.
+  // Configure read and write operations to time out after 1 ms.
   COMMTIMEOUTS timeouts = {0};
   timeouts.ReadIntervalTimeout = 0;
-  timeouts.ReadTotalTimeoutConstant = 100;
+  timeouts.ReadTotalTimeoutConstant = 1;
   timeouts.ReadTotalTimeoutMultiplier = 0;
-  timeouts.WriteTotalTimeoutConstant = 100;
+  timeouts.WriteTotalTimeoutConstant = 1;
   timeouts.WriteTotalTimeoutMultiplier = 0;
 
   success = SetCommTimeouts(port, &timeouts);

@@ -54,7 +54,7 @@ char user_header_info[100] = {0};
 // Debug
 int psoc6_listening_fsm  = 0;
 uint16_t global_cooldown_lvl;
-clock_t global_rst_cooldown_timer;
+uint64_t global_rst_cooldown_timer;
 
 
 /*********************************************************
@@ -219,7 +219,7 @@ void create_new_file(log_info_t *log)
     }
 
     // Creates new file name
-    sprintf(name_buffer, "log%slog_%lu_%u.txt", FILE_SEPARATOR, log->session.init_timestamp, log->file.cnt);
+    sprintf(name_buffer, "log%slog_%llu_%u.txt", FILE_SEPARATOR, log->session.init_timestamp, log->file.cnt);
     memcpy(log->file.name, name_buffer, strlen(name_buffer));
 
     // Creates header
@@ -261,7 +261,7 @@ static void append_psoc_log(log_info_t log)
         fprintf
             (
                 ptr,
-                "@B%u, %u - received at (%lu) %s",
+                "@B%u, %u - received at (%llu) %s",
                 log.file.buffer_cnt,
                 log.psoc.timestamp,
                 log.session.buffer_timestamp,
@@ -324,7 +324,7 @@ void append_msg_log(char *msg, log_info_t log)
 */
 void status_checker(char *device_id, serial_port_t *device_port, log_info_t *log)
 {
-    char log_buffer[100] = {};
+    char log_buffer[100] = {0};
     time_t timestamp = 0;
 
     if ( device_port->status != device_port->last_status )
@@ -333,12 +333,12 @@ void status_checker(char *device_id, serial_port_t *device_port, log_info_t *log
         timestamp = time(NULL);
         if (device_port->last_status == 0)
         {
-            sprintf(log_buffer, "@t (%lu) %s connection UP", timestamp, device_id);
+            sprintf(log_buffer, "@t (%llu) %s connection UP", timestamp, device_id);
         }
         // Falling flag or connection down
         else
         {
-            sprintf(log_buffer, "@t (%lu) %s connection DOWN", timestamp, device_id);
+            sprintf(log_buffer, "@t (%llu) %s connection DOWN", timestamp, device_id);
         }
 
         append_msg_log(log_buffer, *log);
@@ -361,10 +361,10 @@ uint8_t rst_controller(uint8_t rst_req_dsc, log_info_t *log)
 {
     const uint16_t cooldown_level[] = {0, 5, 10, 30, 60, 120, 180, 300};
     const uint8_t lvl_n = 7;
-    char log_buffer[100] = {};
+    char log_buffer[100] = {0};
     time_t timestamp = 0;
 
-    static clock_t rst_cooldown_timer = 0;
+    static uint64_t rst_cooldown_timer = 0;
     uint8_t rst_ctrl_dsc = 0;
 
     if ( time_diff(rst_cooldown_timer) > cooldown_level[log->session.cooldown_cnt]*1000 )
@@ -380,7 +380,7 @@ uint8_t rst_controller(uint8_t rst_req_dsc, log_info_t *log)
 
                 rst_ctrl_dsc += (1 << 0);
                 timestamp = time(NULL);
-                sprintf(log_buffer, "@r (%lu) DUT reset attempt #%d, req dsc: %d", timestamp, log->session.cooldown_cnt, rst_req_dsc);
+                sprintf(log_buffer, "@r (%llu) DUT reset attempt #%d, req dsc: %d", timestamp, log->session.cooldown_cnt, rst_req_dsc);
                 append_msg_log(log_buffer, *log);
 
                 log->session.rst_cnt += 1;
@@ -433,11 +433,11 @@ void append_session_log(log_info_t log)
     memcpy(file_summary, session_summary_template  , strlen(session_summary_template ));
 
     // Start time
-    sprintf(info_buffer, "%lu", log.session.init_timestamp);
+    sprintf(info_buffer, "%llu", log.session.init_timestamp);
     memcpy(file_summary + FILE_SUMMARY_N_COL*3 + 17, info_buffer, strlen(info_buffer));
 
     // End time
-    sprintf(info_buffer, "%lu", log.session.end_timestamp);
+    sprintf(info_buffer, "%llu", log.session.end_timestamp);
     memcpy(file_summary + FILE_SUMMARY_N_COL*4 + 15, info_buffer, strlen(info_buffer));
 
     // Elapsed minutes
@@ -495,7 +495,7 @@ int listen_psoc(serial_port_t *psoc_port, log_info_t *log)
     static uint32_t checksum = 0;
     static int byte_cnt = 0;
     static uint8_t rx_pckt[1024] = {0};
-    static clock_t packet_timer;
+    static uint64_t packet_timer;
 
     // Flags
     uint8_t proc_pckt_flag  = 0,

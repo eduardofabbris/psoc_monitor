@@ -21,7 +21,7 @@
 typedef struct serial_port_struct{
     char name[100];                 // Port name
     int name_len;                   // Port name length
-    clock_t timeout_cnt;            // Timeout connection counter
+    uint64_t timeout_cnt;           // Timeout connection counter
     BOOL status;                    // Status, 1 active and 0 otherwise
     BOOL last_status;               // Last status for verifying status change
     HANDLE device;                  // Device descriptor
@@ -32,7 +32,7 @@ typedef struct serial_port_struct{
 * Defines
 **********************************************/
 
-#define DEBUG_SERIAL_EN 0             // Serial port debug output enable
+#define DEBUG_SERIAL_EN 1             // Serial port debug output enable
 #define PSOC6_CONNECTION_TIMEOUT 10   // Serial connection timeout in seconds
 #define MONITOR_CONNECTION_TIMEOUT 10 // Serial connection timeout in seconds
 

@@ -8,22 +8,22 @@
  */
 #include "include/util.h"
 
-void debug_print(const char *msg)
+/*void debug_print(const char *msg)
 {
     gotoxy(20, 0); 
     printf("Debug output: %s", msg); 
     fflush(stdout);
     char dummy_ch;
     //while(!read(STDIN_FILENO, &dummy_ch, 1));
-}
+}*/
 
 /**
  * @brief  Computes the time difference
- * @param  start_t: initial time
+ * @param  start_t: initial time in microseconds
  * @retval The time elapsed in milliseconds since start_time
  * @note   clock() doesn't measure wall-clock time, i.e. can't be used with msleep in linux
  */
-double time_diff(clock_t start_t)
+double time_diff(uint64_t start_t)
 {
     //return (((double) (get_clock() - start_t)) / (1 + (CLOCKS_PER_SEC - 1)*WINDOWS_EN)) / 1000;
     return ((double) (get_clock() - start_t)) / 1000;
@@ -56,16 +56,56 @@ char *get_timeinfo(time_t timestamp)
 
 #ifdef _WIN32 // @windows
 
+
 /**
  * @brief  Get time in microseconds
  * @retval The CPU time in microseconds
- */
+
 long int get_clock()
 {
     return (long int) ((double)(clock()) / CLOCKS_PER_SEC / 1000000);
 }
+ */
 //**************************************************************************************
 
+/**
+ * @brief  Get time in microseconds
+ * @retval The wall-clock time in microseconds
+ */
+long long get_clock()
+{
+    /*static long long frequency = 0;
+    static LARGE_INTEGER te, ts;
+    if (frequency == 0)
+    {
+        LARGE_INTEGER freq;
+        // Get start program initial reference
+        QueryPerformanceCounter(&ts);
+        // Get core frequency
+        QueryPerformanceFrequency(&freq);
+        frequency = freq.QuadPart;
+    }
+
+    QueryPerformanceCounter(&te);
+    return (long int) ((double)(te.QuadPart - ts.QuadPart) * 1000000.0 / frequency);*/
+
+    
+    //The epoch used by FILETIME starts from January 1, 1601
+    FILETIME ft;
+    ULARGE_INTEGER ui;
+
+    // Get the current system time as a FILETIME
+    GetSystemTimeAsFileTime(&ft);
+    
+    // Convert FILETIME to ULARGE_INTEGER for easier manipulation
+    ui.LowPart = ft.dwLowDateTime;
+    ui.HighPart = ft.dwHighDateTime;
+
+    // Convert to milliseconds (1 tick = 100 nanoseconds, so 10 ticks = 1 microsecond)
+    return  (long long) (ui.QuadPart / 10);
+    
+}
+//**************************************************************************************
 
 /**
  * @brief  Move terminal cursor

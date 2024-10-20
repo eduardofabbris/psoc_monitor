@@ -31,7 +31,7 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port);
 // Debug
 extern int psoc6_listening_fsm;
 extern uint16_t global_cooldown_lvl;
-extern clock_t global_rst_cooldown_timer;
+extern uint64_t global_rst_cooldown_timer;
 
 // User additional information
 extern char user_header_info[100];
@@ -64,7 +64,10 @@ static void init_terminal()
 {
     if(WINDOWS_EN)
     {
-        //system("MODE con cols=86 lines=18");
+        get_clock();
+        hide_cursor(1);
+        //system("chcp 65001");
+        system("MODE con cols=87 lines=19");
     }
     else
     {
@@ -85,7 +88,9 @@ static void reset_terminal()
     if(WINDOWS_EN)
     {
         //system("MODE con cols=80 lines=22");
-        //system("MODE con cols=120 lines=30");
+        system("MODE con cols=120 lines=30");
+        //system("chcp 437");
+        hide_cursor(0);
     }
     else
     {
@@ -118,7 +123,7 @@ int main(){
     };
 
     // Timer and counters
-    clock_t attempt_connection_timer;
+    uint64_t attempt_connection_timer;
     uint8_t attempt_status = 0;
 
     // Screen
@@ -158,8 +163,8 @@ int main(){
                     psoc_port.last_status = 1;
                     monitor_port.last_status = 1;
 					memset(user_header_info, '\0', sizeof(user_header_info));
-                    memset(psoc_port.name, '\0', sizeof(psoc_port.name));
-                    memset(monitor_port.name, '\0', sizeof(monitor_port.name));
+                    //memset(psoc_port.name, '\0', sizeof(psoc_port.name));
+                    //memset(monitor_port.name, '\0', sizeof(monitor_port.name));
                     status_prompt = NULL;
                     fsm_st = FSM_GET_PSOC_PORT_ST;
                 }
@@ -189,15 +194,16 @@ int main(){
                 // Verify serial port
                 else if (str_len > 0)
                 {
+                    memset(psoc_port.name, '\0', sizeof(psoc_port.name));
                     memcpy(psoc_port.name, user_input, str_len);
                     psoc_port.name_len = str_len;
-
+                    //TODO: bug if choose non exsiting port
                     // Attempt connection
                     psoc_port.device = open_serial_port(psoc_port.name, psoc_port.name_len, 115200);
 
                     // Verify port
-                    //if (psoc_port.device != INVALID_HANDLE_VALUE)
-                    if (psoc_port.device > 0)
+                    if (psoc_port.device != INVALID_HANDLE_VALUE)
+                    //if (psoc_port.device > 0)
                     {
                         // Verify device
                         attempt_status = 0;
@@ -217,7 +223,7 @@ int main(){
                 str_len = get_keyboard_str(NULL, NULL, 1);
 
                 // Print selected ports
-                memcpy(input_layer + PSOC_PROMPT_OFFSET,    psoc_port.name, psoc_port.name_len);
+                memcpy(input_layer + PSOC_PROMPT_OFFSET, psoc_port.name, psoc_port.name_len);
 
                 // Print status
                 temp = strlen(attempting_status_template);
@@ -243,6 +249,8 @@ int main(){
                     }
                     else
                     {
+                        // Close open ports
+                        close_serial_port(psoc_port.device);
                         fsm_st = FSM_GET_PSOC_PORT_ST;
                         status_prompt = (char *) error_status_template;
                     }
@@ -279,6 +287,7 @@ int main(){
                 // Verify port
                 else if (str_len > 0)
                 {
+                    memset(monitor_port.name, '\0', sizeof(monitor_port.name));
                     memcpy(monitor_port.name, user_input, str_len);
                     monitor_port.name_len = str_len;
 
@@ -287,8 +296,8 @@ int main(){
                         // Attempt connection
                         monitor_port.device = open_serial_port(monitor_port.name, monitor_port.name_len, 115200);
 
-                        //if (monitor_port.device != INVALID_HANDLE_VALUE)
-                        if (monitor_port.device > 0)
+                        if (monitor_port.device != INVALID_HANDLE_VALUE)
+                        //if (monitor_port.device > 0)
                         {
                             // Verify device
                             attempt_status = 0;
@@ -448,8 +457,8 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
     double  psoc_timer,
             monitor_timer;
     time_t  temp_timestamp   = 0;
-    clock_t spinner_timer    = 0,
-            new_buffer_timer = 0;
+    uint64_t spinner_timer    = 0,
+             new_buffer_timer = 0;
 
     // Flags
     uint8_t new_buf_flag  = 0,
@@ -552,7 +561,7 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
         if ((rst_ctrl_dsc >> 7) & 1)
         {
             temp_timestamp = time(NULL);
-            sprintf(info_buffer, "@a (%lu) session abort - psoc device unmanageable", temp_timestamp);
+            sprintf(info_buffer, "@a (%llu) session abort - psoc device unmanageable", temp_timestamp);
             append_msg_log(info_buffer, monitoring_info);
             response  = 0;
             exit_flag = 1;
