@@ -38,13 +38,13 @@ extern char user_header_info[100];
 
 // Templates
 extern char *main_menu_template;
-extern char *monitor_ascii_art[];
 extern char *monitor_menu_template;
 extern char *debug_menu_template;
 extern char *prompt_menu_template;
 
 const char *connected_status_template        =  "Connected";
 const char *error_status_template            =  "Error connecting to port!";
+const char *check_connection_status_template =  "Error! Check cables connection";
 const char *exit_prompt_template             =  "Are you sure you want to Exit?";
 const char *progrss_spinner_template         = "|/-\\";
 const char *attempting_status_template       =  "Attempting connection...";
@@ -64,18 +64,16 @@ static void init_terminal()
 {
     if(WINDOWS_EN)
     {
-        get_clock();
         hide_cursor(1);
-        //system("chcp 65001");
         system("MODE con cols=87 lines=19");
     }
     else
     {
         set_nonblock(1);
         hide_cursor(1);
-
-        system("echo -ne '\e[8;18;86t'");
+        system("echo -ne '\e[8;19;87t'");
     }
+    clrscr();
 }
 //**************************************************************************************
 
@@ -89,7 +87,6 @@ static void reset_terminal()
     {
         //system("MODE con cols=80 lines=22");
         system("MODE con cols=120 lines=30");
-        //system("chcp 437");
         hide_cursor(0);
     }
     else
@@ -162,9 +159,7 @@ int main(){
                     // Reset variables
                     psoc_port.last_status = 1;
                     monitor_port.last_status = 1;
-					memset(user_header_info, '\0', sizeof(user_header_info));
-                    //memset(psoc_port.name, '\0', sizeof(psoc_port.name));
-                    //memset(monitor_port.name, '\0', sizeof(monitor_port.name));
+                    memset(user_header_info, '\0', sizeof(user_header_info));
                     status_prompt = NULL;
                     fsm_st = FSM_GET_PSOC_PORT_ST;
                 }
@@ -197,13 +192,11 @@ int main(){
                     memset(psoc_port.name, '\0', sizeof(psoc_port.name));
                     memcpy(psoc_port.name, user_input, str_len);
                     psoc_port.name_len = str_len;
-                    //TODO: bug if choose non exsiting port
                     // Attempt connection
                     psoc_port.device = open_serial_port(psoc_port.name, psoc_port.name_len, 115200);
 
                     // Verify port
                     if (psoc_port.device != INVALID_HANDLE_VALUE)
-                    //if (psoc_port.device > 0)
                     {
                         // Verify device
                         attempt_status = 0;
@@ -297,7 +290,6 @@ int main(){
                         monitor_port.device = open_serial_port(monitor_port.name, monitor_port.name_len, 115200);
 
                         if (monitor_port.device != INVALID_HANDLE_VALUE)
-                        //if (monitor_port.device > 0)
                         {
                             // Verify device
                             attempt_status = 0;
@@ -342,7 +334,7 @@ int main(){
                 {
                     if ( attempt_status == 0 && time_diff(attempt_connection_timer) < MONITOR_CONNECTION_TIMEOUT*1000 )
                     {
-                        // TODO: if cable not connected in DUT, it only sends WT
+                        // If cable not connected to DUT, it only sends WT
                         attempt_status = attempt_connection(&monitor_port, "WA");
                     }
                     else if (attempt_status)
@@ -352,7 +344,7 @@ int main(){
                     else
                     {
                         fsm_st = FSM_GET_MONITOR_DEVICE_PORT_ST;
-                        status_prompt = (char *) error_status_template;
+                        status_prompt = (char *) check_connection_status_template;
                     }
                 }
 
@@ -416,7 +408,7 @@ int main(){
 
         if (background != NULL)
         {
-            update_screen(background, input_layer, NULL);
+            update_screen(background, input_layer);
             //while(1);
             msleep(10);
         }
@@ -504,7 +496,7 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
         }
 
         // DUT core hang timeout reset request
-		// Before resetting device, verify if possible hang was due to new buffer transmission
+        // Before resetting device, verify if possible hang was due to new buffer transmission
         if ( dut_hang_flag && new_buf_flag == 0 && time_diff(new_buffer_timer) > 600 )
         {
             reset_request |= (1 << 7);
@@ -561,7 +553,7 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
         if ((rst_ctrl_dsc >> 7) & 1)
         {
             temp_timestamp = time(NULL);
-            sprintf(info_buffer, "@a (%llu) session abort - psoc device unmanageable", temp_timestamp);
+            sprintf(info_buffer, "@a (%" PRIu64 ") session abort - psoc device unmanageable", temp_timestamp);
             append_msg_log(info_buffer, monitoring_info);
             response  = 0;
             exit_flag = 1;
@@ -665,27 +657,22 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
             }
         }
 
-        // Change default prompt
+        // Change prompt
         if (status_prompt != NULL)
         {
             temp = strlen(status_prompt);
             memcpy(input_layer + STATUS_PROMPT_OFFSET , status_prompt, temp);
-        }
-        // Update spinner animation
-        else
-        {
-            input_layer[STATUS_PROMPT_OFFSET + DEFAULT_STATUS_PROMPT_LEN + 1] = progrss_spinner_template[spinner_cnt];
-            if ( time_diff(spinner_timer) >= 100)
-            {
-                spinner_cnt = spinner_cnt < SPINNER_ANIMATION_LEN ? spinner_cnt + 1 : 0;
-                spinner_timer = get_clock();
-            }
         }
 
         // Number of received buffers info
         sprintf(info_buffer, "%d",  monitoring_info.session.buffer_cnt);
         temp = strlen(info_buffer);
         memcpy(input_layer + TERM_N_COL*11 + 53 , info_buffer, temp);
+
+        // Number of total resets info
+        sprintf(info_buffer, "%d",  monitoring_info.session.rst_cnt);
+        temp = strlen(info_buffer);
+        memcpy(input_layer + TERM_N_COL*12 + 52 , info_buffer, temp);
 
         // Debug menu enabled
         if (debug_flag)
@@ -700,22 +687,22 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
             // DUT connection timeout info
             sprintf(info_buffer, "%.2f",  PSOC6_CONNECTION_TIMEOUT - psoc_timer/1000);
             temp = strlen(info_buffer);
-            memcpy(input_layer + TERM_N_COL*12 + 68 , info_buffer, temp);
+            memcpy(input_layer + TERM_N_COL*14 + 29, info_buffer, temp);
 
             // Watchdog connection timeout info
             sprintf(info_buffer, "%.2f",  MONITOR_CONNECTION_TIMEOUT - monitor_timer/1000);
             temp = strlen(info_buffer);
-            memcpy(input_layer + TERM_N_COL*13 + 67 , info_buffer, temp);
+            memcpy(input_layer + TERM_N_COL*15 + 28, info_buffer, temp);
 
             // DUT connection timeout resets (alive signal from serial)
             sprintf(info_buffer, "%d",  monitoring_info.session.con_rst_cnt);
             temp = strlen(info_buffer);
-            memcpy(input_layer + TERM_N_COL*14 + 66 , info_buffer, temp);
+            memcpy(input_layer + TERM_N_COL*13 + 66 , info_buffer, temp);
 
             // Core hang timeout resets (alive signal)
             sprintf(info_buffer, "%d",  monitoring_info.session.hang_rst_cnt);
             temp = strlen(info_buffer);
-            memcpy(input_layer + TERM_N_COL*15 + 64 , info_buffer, temp);
+            memcpy(input_layer + TERM_N_COL*14 + 64 , info_buffer, temp);
 
             // Elapsed minutes since session start
             time_t progress_timestamp = time(NULL);
@@ -728,11 +715,19 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
             temp = strlen(info_buffer);
             memcpy(input_layer + TERM_N_COL*13 + 21 , info_buffer, temp);
 
-            update_screen(debug_menu_template, input_layer, NULL);
+            update_screen(debug_menu_template, input_layer);
         }
         else
         {
-            update_screen(monitor_menu_template, input_layer, monitor_ascii_art);
+            // Update spinner animation
+            input_layer[9*TERM_N_COL + 19 ] = progrss_spinner_template[spinner_cnt];
+            if ( time_diff(spinner_timer) >= 100)
+            {
+                spinner_cnt = spinner_cnt < SPINNER_ANIMATION_LEN ? spinner_cnt + 1 : 0;
+                spinner_timer = get_clock();
+            }
+
+            update_screen(monitor_menu_template, input_layer);
         }
         msleep(10);
     }

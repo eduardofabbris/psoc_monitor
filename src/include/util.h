@@ -40,7 +40,6 @@ char *get_timeinfo(time_t timestamp);
 // Terminal
 void gotoxy(int x, int y);
 void hide_cursor(int state);
-//void debug_print(const char *msg);
 
 char get_char();
 
@@ -83,13 +82,9 @@ char get_char();
  * LINUX Includes
  *********************************************/
 
-//#include <fcntl.h> // Contains file controls like O_RDWR
-//#include <sys/file.h>
-
 #include <unistd.h>
 #include <termios.h>
 #include <sys/select.h>
-//#include <stdio_ext.h> // Add __fpurge TODO: do i need?
 
 /**********************************************
  * LINUX Defines

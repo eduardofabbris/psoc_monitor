@@ -8,15 +8,6 @@
  */
 #include "include/util.h"
 
-/*void debug_print(const char *msg)
-{
-    gotoxy(20, 0); 
-    printf("Debug output: %s", msg); 
-    fflush(stdout);
-    char dummy_ch;
-    //while(!read(STDIN_FILENO, &dummy_ch, 1));
-}*/
-
 /**
  * @brief  Computes the time difference
  * @param  start_t: initial time in microseconds
@@ -56,54 +47,25 @@ char *get_timeinfo(time_t timestamp)
 
 #ifdef _WIN32 // @windows
 
-
-/**
- * @brief  Get time in microseconds
- * @retval The CPU time in microseconds
-
-long int get_clock()
-{
-    return (long int) ((double)(clock()) / CLOCKS_PER_SEC / 1000000);
-}
- */
-//**************************************************************************************
-
 /**
  * @brief  Get time in microseconds
  * @retval The wall-clock time in microseconds
  */
 long long get_clock()
 {
-    /*static long long frequency = 0;
-    static LARGE_INTEGER te, ts;
-    if (frequency == 0)
-    {
-        LARGE_INTEGER freq;
-        // Get start program initial reference
-        QueryPerformanceCounter(&ts);
-        // Get core frequency
-        QueryPerformanceFrequency(&freq);
-        frequency = freq.QuadPart;
-    }
-
-    QueryPerformanceCounter(&te);
-    return (long int) ((double)(te.QuadPart - ts.QuadPart) * 1000000.0 / frequency);*/
-
-    
     //The epoch used by FILETIME starts from January 1, 1601
     FILETIME ft;
     ULARGE_INTEGER ui;
 
     // Get the current system time as a FILETIME
     GetSystemTimeAsFileTime(&ft);
-    
-    // Convert FILETIME to ULARGE_INTEGER for easier manipulation
+
+    // Convert FILETIME to ULARGE_INTEGER
     ui.LowPart = ft.dwLowDateTime;
     ui.HighPart = ft.dwHighDateTime;
 
-    // Convert to milliseconds (1 tick = 100 nanoseconds, so 10 ticks = 1 microsecond)
+    // Convert to microseconds (1 tick = 100 nanoseconds)
     return  (long long) (ui.QuadPart / 10);
-    
 }
 //**************************************************************************************
 
@@ -160,11 +122,11 @@ char get_char()
  * @brief  Get time in microseconds
  * @retval The wall-clock time in microseconds
  */
-long int get_clock()
+long long get_clock()
 {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    return (long int) ((ts.tv_sec * 1000000LL) + (ts.tv_nsec / 1000));
+    return (long long) ((ts.tv_sec * 1000000LL) + (ts.tv_nsec / 1000));
 }
 //**************************************************************************************
 

@@ -29,11 +29,12 @@ static void print_error(const char * context)
   }
 }
 
-// COM ports higher than COM9 need the \\.\ prefix 
+// COM ports higher than COM9 need the \\.\ prefix
 // which tells Windows to treat it as a device name rather than as a regular string, and is written as
 // "\\\\.\\" in C because we need to escape the backslashes.
 HANDLE open_serial_port(const char * device, int name_len, uint32_t baud_rate)
 {
+  (void) name_len;
   char name_buf[100] = {0};
   const char *port_prefix = "\\\\.\\";
 

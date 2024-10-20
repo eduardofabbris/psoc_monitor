@@ -20,22 +20,21 @@
 //|  ___/ \___ \ / _ \| |         | '_ \     | |\/| |/ _ \| '_ \| | __/ _ \| '__|
 //| |     ____) | (_) | |____     | (_) |    | |  | | (_) | | | | | || (_) | |
 //|_|    |_____/ \___/ \_____|     \___/     |_|  |_|\___/|_| |_|_|\__\___/|_|
-//
-//⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//⠀⠀⠀⣸⣏⠛⠻⠿⣿⣶⣤⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//⠀⠀⠀⣿⣿⣿⣷⣦⣤⣈⠙⠛⠿⣿⣷⣶⣤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣶⣦⣄⣈⠙⠻⠿⣿⣷⣶⣤⣀⡀⠀⠀⠀⠀⠀⠀
-//⠀⠀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣦⣄⡉⠛⠻⢿⣿⣷⣶⣤⣀⠀⠀
-//⠀⠀⠀⠉⠙⠛⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣾⢻⣍⡉⠉⣿⠇⠀
-//⠀⠀⠀⠀⠀⠀⠀⢹⡏⢹⣿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇⣰⣿⣿⣾⠏⠀⠀
-//⠀⠀⠀⠀⠀⠀⠀⠘⣿⠈⣿⠸⣯⠉⠛⠿⢿⣿⣿⣿⣿⡏⠀⠻⠿⣿⠇⠀⠀⠀
-//⠀⠀⠀⠀⠀⠀⠀⠀⢿⡆⢻⡄⣿⡀⠀⠀⠀⠈⠙⠛⠿⠿⠿⠿⠛⠋⠀⠀⠀⠀
-//⠀⠀⠀⠀⠀⠀⠀⠀⢸⣧⠘⣇⢸⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//⠀⠀⠀⠀⠀⠀⠀⣀⣀⣿⣴⣿⢾⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//⠀⠀⣴⡶⠾⠟⠛⠋⢹⡏⠀⢹⡇⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//⠀⢠⣿⠀⠀⠀⠀⢀⣈⣿⣶⠿⠿⠛⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//⠀⢸⣿⣴⠶⠞⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-//⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+//                     o
+//            o       /
+//             \     /
+//              \   /
+//               \ /
+// +--------------v-------------+
+// |  __________________        |
+// | /                  \       |
+// | | In progress      |  (\)  |
+// | |                  |       |
+// | |                  |  (-)  |
+// | |                  |       |
+// | \                  /       |
+// |  ------------------      o |
+// +----------------------------+
 
 /*********************************************************
 * Global Variables
@@ -86,44 +85,25 @@ const char *prompt_menu_template =
 +-----------------------------------------------------------------------------------+\
 "};
 
-const char *monitor_ascii_art[] = {
-//"                                   ",
-"⠀⠀⠀⣸⣏⠛⠻⠿⣿⣶⣤⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
-"⠀⠀⠀⣿⣿⣿⣷⣦⣤⣈⠙⠛⠿⣿⣷⣶⣤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
-"⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣶⣦⣄⣈⠙⠻⠿⣿⣷⣶⣤⣀⡀⠀⠀⠀⠀⠀",
-"⠀⠀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣦⣄⡉⠛⠻⢿⣿⣷⣶⣤⣀⠀",
-"⠀⠀⠀⠉⠙⠛⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣾⢻⣍⡉⠉⣿⠇",
-"⠀⠀⠀⠀⠀⠀⠀⢹⡏⢹⣿⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇⣰⣿⣿⣾⠏⠀",
-"⠀⠀⠀⠀⠀⠀⠀⠘⣿⠈⣿⠸⣯⠉⠛⠿⢿⣿⣿⣿⣿⡏⠀⠻⠿⣿⠇⠀⠀",
-"⠀⠀⠀⠀⠀⠀⠀⠀⢿⡆⢻⡄⣿⡀⠀⠀⠀⠈⠙⠛⠿⠿⠿⠿⠛⠋⠀⠀⠀",
-"⠀⠀⠀⠀⠀⠀⠀⠀⢸⣧⠘⣇⢸⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
-"⠀⠀⠀⠀⠀⠀⠀⣀⣀⣿⣴⣿⢾⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
-"⠀⠀⣴⡶⠾⠟⠛⠋⢹⡏⠀⢹⡇⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
-"⠀⢠⣿⠀⠀⠀⠀⢀⣈⣿⣶⠿⠿⠛⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
-"⠀⢸⣿⣴⠶⠞⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
-"⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
-"\0",
-};
-
 const char *monitor_menu_template =
 {"\
 +-----------------------------------------------------------------------------------+\
-|                                                                                   |\
-|                                              P S o C  6   M o n i t o r           |\
-|                                                                                   |\
-|                                     Device Status                                 |\
-|                                                                                   |\
-|                                         - PSoc 6: Connected                       |\
-|                                         - Watchdog: Connected                     |\
-|                                                                                   |\
-|                                     Info                                          |\
-|                                                                                   |\
-|                                         - Buffers:                                |\
-|                                                                                   |\
-|                                                                                   |\
-|                                                                                   |\
-|                                                                 Confirm: [ENTER]  |\
-|  In progress                                                  Back/Exit: [ESC]    |\
+|                      o                                                            |\
+|             o       /                        P S o C  6   M o n i t o r           |\
+|              \\     /                                                              |\
+|               \\   /                 Device Status                                 |\
+|                \\ /                                                                |\
+|  +--------------v-------------+         - PSoc 6: Connected                       |\
+|  |  __________________        |         - Watchdog: Connected                     |\
+|  | /                  \\       |                                                   |\
+|  | | In progress      |  (x)  |     Info                                          |\
+|  | |                  |       |                                                   |\
+|  | |                  |  (-)  |         - Buffers:                                |\
+|  | |                  |       |         - Resets:                                 |\
+|  | \\                  /       |                                                   |\
+|  |  ------------------    ooo |                                                   |\
+|  +----------------------------+                                 Confirm: [ENTER]  |\
+|                                                               Back/Exit: [ESC]    |\
 +-----------------------------------------------------------------------------------+\
 "};
 
@@ -141,11 +121,11 @@ const char *debug_menu_template =
 |  - Em: Memory                    |  Info                                          |\
 |  - Es: Stop UART                 |                                                |\
 |                                  |      - Buffers:                                |\
-|  - Elapsed min:                  |      - DUT response countdown:                 |\
-|  - Received pckts:               |      - WD response countdown:                  |\
-|                                  |      - Serial reset counter:                   |\
-|                                  |      - Hang reset counter:                     |\
-|  In progress                     |                               Back/Exit: [ESC] |\
+|  - Elapsed min:                  |      - Resets:                                 |\
+|  - Received pckts:               |      - Serial reset counter:                   |\
+|  - DUT response countdown:       |      - Hang reset counter:                     |\
+|  - WD response countdown:        |                                                |\
+|                                  |                               Back/Exit: [ESC] |\
 +----------------------------------+------------------------------------------------+\
 "};
 
@@ -154,18 +134,17 @@ const char *debug_menu_template =
 *********************************************************/
 
 /**
- * @brief  Clear screen and print a new one
- * @param  background: template to print as background
- * @param  input_layer: layer to print over the background
+ * @brief  Update screen layers
+ * @param  *background: template to print as background
+ * @param  *input_layer: layer to print over the background
  * @retval None
  */
-void update_screen(const char *background, char *input_layer, char *ascii_art[])
+void update_screen(const char *background, char *input_layer)
 {
     static char clear_layer[TERM_N_COL*TERM_N_ROW] = {'\0'};
     static char *last_background = NULL;
     char bck_ch, input_ch, clr_ch, output_ch;
 
-    //clrscr();
     for(int i = 0; i < TERM_N_ROW; i++)
     {
         for(int j = 0; j < TERM_N_COL; j++)
@@ -185,9 +164,9 @@ void update_screen(const char *background, char *input_layer, char *ascii_art[])
             else if (clr_ch != '\0')
             {
                 output_ch = bck_ch;
-                clear_layer[TERM_N_COL*i + j] = '\0';        
-            }          
-            // Force new background print if the scene has changed      
+                clear_layer[TERM_N_COL*i + j] = '\0';
+            }
+            // Force new background print if the scene has changed
             else if(last_background != background)
             {
                 output_ch = bck_ch;
@@ -195,23 +174,13 @@ void update_screen(const char *background, char *input_layer, char *ascii_art[])
             // Output character
             if (output_ch != '\0')
             {
-                gotoxy(i, j), printf("%c", output_ch);  
-            }            
+                gotoxy(i, j), printf("%c", output_ch);
+            }
         }
     }
 
+    // Update background ptr
     last_background = (char *) background;
-    //memset(clear_layer, '\0', TERM_N_ROW*TERM_N_COL);
-    // Print ASCII art
-    /*if (ascii_art != NULL)
-    {
-        gotoxy(1, 3);
-        for (int i = 0; **(ascii_art + i) ; i++)
-        {
-            gotoxy(1 + i, 3);
-            printf("%s", ascii_art[i]);
-        }
-    }*/
 
     // force terminal output update
     fflush(stdout);

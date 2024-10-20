@@ -32,7 +32,7 @@ typedef struct serial_port_struct{
 * Defines
 **********************************************/
 
-#define DEBUG_SERIAL_EN 1             // Serial port debug output enable
+#define DEBUG_SERIAL_EN 0             // Serial port debug output enable
 #define PSOC6_CONNECTION_TIMEOUT 10   // Serial connection timeout in seconds
 #define MONITOR_CONNECTION_TIMEOUT 10 // Serial connection timeout in seconds
 
@@ -47,10 +47,6 @@ typedef struct serial_port_struct{
 #define ERROR_CODE_DOES_NOT_RECOGNIZE_DEVICE 22
 #define ERROR_CODE_CANNOT_FIND_DEVICE 2
 #define ERROR_CODE_ACCESS_DENIED 5
-
-// Timeout (ms)
-//#define READ_TIME_OUT_CONSTANT 100
-//#define WRITE_TIME_OUT_CONSTANT 100
 
 /**********************************************
 * WINDOWS Prototypes
