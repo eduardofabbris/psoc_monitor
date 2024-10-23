@@ -1,0 +1,205 @@
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{caption, subcaption}
+\usepackage{float}
+\usepackage{array}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage{mdframed}
+\definecolor{CornFlower}{RGB}{17, 85, 204}
+\usepackage{ragged2e}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary {backgrounds} 
+\usepackage{circuitikz}
+\usetikzlibrary{arrows.meta,
+                chains,
+                positioning,
+                shapes.geometric
+                }
+                
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{enumitem}
+\usepackage{pdfpages}
+%---------------- EQUATIONS ----------------
+\usepackage{mathtools}
+\usepackage[thinc]{esdiff}
+
+\usepackage{environ}
+\NewEnviron{NORMAL}{% 
+    \scalebox{1.5}{$\BODY$} 
+}
+\renewcommand{\theequation}{\arabic{equation}}
+
+%---------------- FONT ----------------
+%Times new Roman
+%\usepackage{times} % just letter
+\usepackage{mathptmx} % letter + math text
+\usepackage{bm}
+%---------------- SPACING ----------------
+%showframe
+\usepackage[top=3.25cm, left=1.75cm, bottom=2.75cm, right=1.75cm]{geometry}
+%\onehalfspacing
+\linespread{1.5} 
+%---------------- INDENTATION ----------------
+\usepackage[none]{hyphenat}
+\sloppy
+\usepackage{indentfirst}
+\setlength{\parindent}{1.3cm}
+
+%----------------------------------------
+\renewcommand{\@seccntformat}[1]{\csname the#1\endcsname.~}
+
+%\renewcommand*{\thesection}{\Roman{section}}
+%\renewcommand{\section}{\@startsection{section}{1}{0mm}%
+%                                     {-12pt}%
+%                                     {6pt}%
+%                                     {\setlength\parindent{0em} \fontsize{12}{14} \selectfont \bfseries\textsc}}%
+%\renewcommand{\section}{\@startsection{section}{1}{0mm}%
+%                                     {-12pt}%
+%                                     {6pt}%
+%                                     {\setlength\parindent{0em} \fontsize{14}{16} \selectfont \bfseries}}%
+%
+%\renewcommand \thesubsection{\alph{subsection}}
+%\renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
+%                                     {-12pt}%
+%                                     {6pt}%
+%                                     {\setlength\parindent{0em} \fontsize{11}{13} \selectfont \bfseries\textit}}%
+%\renewcommand \thesubsubsection{\arabic{subsubsection}}
+%\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{0mm}%
+%                                     {-12pt}%
+%                                     {6pt}%
+%                                     {\setlength\parindent{0em} \fontsize{11}{13} \selectfont \textit}}
+%
+
+%---------------- HEADER AND FOOTER ----------------
+\usepackage{fancyhdr}
+\usepackage{etoolbox}
+\patchcmd{\chapter}
+{\thispagestyle{plain}}{\thispagestyle{empty}}
+{}
+{}
+\patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
+
+
+\fancyhead{} % clear all header fields
+\fancyfoot{} 
+
+\fancyhead[R]{\textbf{\thepage}\\}
+%\fancyhead[L]{\textit{Relatório de Atividades IC PSoC 6 - , 2023 } }
+\renewcommand{\headrulewidth}{0pt}
+%\makeatletter
+%   \patchcmd{\ps@myheadings}{\hfil\thepage}{\textit{Relatório de Atividades PSoC 6 ,  2023} \hfil\textbf{\thepage}  }{}{}
+%\makeatother
+%----------------------------------------
+%---------------- FIGURES AND TABLES, CAPTION ----------------
+%#1, #2, and #3 that are replaced with the caption label, the separator, and the text
+\DeclareCaptionFormat{custom}
+{
+    \normalsize{#1#2#3}
+}
+\DeclareCaptionLabelSeparator{custom}{\bfseries \space -- \space}
+
+\renewcommand{\figurename}{\bfseries Figura}
+\renewcommand{\thefigure}{\arabic{figure}}
+\renewcommand{\tablename}{\bfseries Table}
+\renewcommand{\thetable}{\arabic{table}}
+
+\captionsetup
+{
+    format=custom,
+    labelsep=custom
+}
+\setlength{\tabcolsep}{18pt} %horizontal gap
+\renewcommand{\arraystretch}{0.9} %vertical space
+
+
+%---------------- REFERENCES AND LINKS ----------------
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue,
+    citecolor=black,
+    pdftitle=relatorioDeAtividadesIC
+}
+
+%----------------------------------------
+
+
+\newcommand{\hl}{\colorbox{yellow}}
+
+%----------------------------------------
+
+\usepackage[normalem]{ulem}
+\usetikzlibrary{shapes.geometric, arrows, shapes.symbols, shapes.multipart}
+
+\tikzstyle{converter}=[signal, 
+                       minimum width = 2cm, 
+                       minimum height = 1cm,
+                       text centered, 
+                       draw=black,
+                       thick,
+                ]
+
+
+\tikzstyle{block}=[ rectangle, 
+                        rounded corners,
+                        minimum width = 3cm, 
+                        minimum height = 1cm, 
+                        text centered, 
+                        draw=black, 
+                        fill = black!30]
+
+\tikzstyle{io}=[    trapezium, 
+                    trapezium left angle=70, 
+                    trapezium right angle=110,
+                    minimum width=3cm, minimum height=1cm,
+                    text centered, 
+                    draw=black, 
+                    fill=blue!30]
+
+\tikzstyle{process}=[ rectangle, 
+                        minimum width = 3cm, 
+                        minimum height = 1cm, 
+                        text centered, 
+                        draw=black, 
+                        fill = orange!30]
+
+
+\tikzstyle{block2}=[ rectangle, 
+                        minimum width = 3cm, 
+                        minimum height = 1cm, 
+                        text centered, 
+                        draw=black, 
+                        fill = violet!30]
+
+\tikzstyle{block3}=[ rectangle, 
+                        minimum width = 3cm, 
+                        minimum height = 1cm, 
+                        text centered, 
+                        draw=black, 
+                        fill = red!30]
+
+
+\tikzstyle{decision}=[ diamond, 
+                        minimum width = 3cm, 
+                        minimum height = 1cm, 
+                        text centered, 
+                        draw=black, 
+                        fill = green!30]
+
+
+\tikzstyle{buff}=[ circle, 
+                        minimum width = 2cm, 
+                        minimum height = 1cm, 
+                        text centered, 
+                        draw=black, 
+                        fill = cyan!40]
+
+
+\tikzstyle{arrow}=[thick,->,>=stealth]
+\renewcommand*\contentsname{Conteúdo}
+\setcounter{tocdepth}{3}
