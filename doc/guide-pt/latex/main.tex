@@ -31,7 +31,7 @@ Esta parte do guia visa mostrar o passo a passo para a montagem do experimento c
 
 \begin{itemize}[leftmargin=1.3cm]
     \item Certifique-se que o sistema operacional não será suspenso ou desligado automaticamente nas opções de energia do computador;
-    \item Obtenha o software \text{"monitor\_psoc"} para o sistema operacional escolhido;
+    \item Obtenha o software \text{``monitor\_psoc"} para o sistema operacional escolhido;
     \item Tenha em mãos os dois kits de desenvolvimento e os cabos USB para a conexão dos dispositivos com a interface serial do software.
 \end{itemize}
 
@@ -85,7 +85,16 @@ Para descobrir a porta serial dos dipositivos, o usuário poderá entrar em Gere
     \label{fig:device_manager}
 \end{figure}
 
-Ou então, se o sistema operacional for linux, listar as portas utlizando: ``ls /dev/ttyUSB* /dev/ttyACM*". Caso o usuário tente conectar o kit errado, o software acusará "Error connecting to port!" após de "Attempting connection \text{...}" e então basta selecionar a outra porta serial.
+Ou então, se o sistema operacional for linux, listar as portas utlizando: ``ls /dev/ttyUSB* /dev/ttyACM*". Caso o usuário tente conectar o kit errado, o software acusará ``Error connecting to port!" após de ``Attempting connection \text{...}" e então basta selecionar a outra porta serial.
+
+\begin{figure}[H]
+    \centering
+    \caption{Conectando portas seriais no Windows}
+    \includegraphics[width=0.8\textwidth]{../imgs/serial_windows.png}
+
+    \vspace{0.5em}
+    \label{fig:serial_linux}
+\end{figure}
 
 \begin{figure}[H]
     \centering
@@ -124,10 +133,18 @@ Ambos os kits devem ter seus leds piscando (watchdog vermelho e DUT verde) que p
 
 \section{Atualizando o Firmware}
 
-Caso seja necessário regravar a imagem da flash do dispositivo, o usuário -- com o arquivo \text{.}hex em mãos -- pode utilizar o programa PSoC Programmer que é encontrado para windows pelo link: https://softwaretools.infineon.com/tools/com.ifx.tb.tool.psocprogrammer
+Caso seja necessário regravar a imagem da flash do dispositivo, o usuário -- com o arquivo \text{.}hex em mãos -- pode utilizar o programa PSoC Programmer que é encontrado para windows pelo link: \url{https://softwaretools.infineon.com/tools/com.ifx.tb.tool.psocprogrammer}
 
 % Image PSoc Programmer
+\begin{figure}[H]
+    \centering
+    \caption{PSoC Programmer}
+    \includegraphics[width=0.8\textwidth]{../imgs/psoc_programmer.png}
 
-O passo a passo de como carregar o arquivo para o SOC é explicado no seguinte vídeo: https://www.youtube.com/watch?v=aPe2A1J0OIA
+    \vspace{0.5em}
+    \label{fig:psoc_programmer}
+\end{figure}
+
+O passo a passo de como carregar o arquivo para o SOC é explicado no seguinte vídeo: \url{https://www.youtube.com/watch?v=aPe2A1J0OIA}
 \end{document}
 
