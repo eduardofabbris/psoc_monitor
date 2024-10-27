@@ -99,7 +99,7 @@ const char *monitor_menu_template =
 |  | /                  \\       |                                                   |\
 |  | | In progress      |  (x)  |     Info                                          |\
 |  | |                  |       |                                                   |\
-|  | |                  |  (-)  |         - Buffers:                                |\
+|  | |                  |  (-)  |         - Error count:                            |\
 |  | |                  |       |         - Resets:                                 |\
 |  | \\                  /       |                                                   |\
 |  |  ------------------    ooo |                                                   |\
@@ -117,11 +117,11 @@ const char *debug_menu_template =
 |         device)                  |  Device Status                                 |\
 |  - Et: Time                      |                                                |\
 |  - Eu: Single Upset              |      - PSoc 6: Connected                       |\
-|  - El: Latch-up                  |      - Watchdog: Connected                     |\
+|  - El: Sample Latch              |      - Watchdog: Connected                     |\
 |  - Eh: Core hang                 |                                                |\
 |  - Em: Memory                    |  Info                                          |\
 |  - Es: Stop UART                 |                                                |\
-|                                  |      - Buffers:                                |\
+|                                  |      - Error count:                            |\
 |  - Elapsed min:                  |      - Resets:                                 |\
 |  - Received pckts:               |      - Serial reset counter:                   |\
 |  - DUT response countdown:       |      - Hang reset counter:                     |\

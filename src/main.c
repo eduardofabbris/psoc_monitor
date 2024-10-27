@@ -48,7 +48,7 @@ const char *exit_prompt_template             =  "Are you sure you want to Exit?"
 const char *progrss_spinner_template         = "|/-\\";
 const char *attempting_status_template       =  "Attempting connection...";
 const char *lost_connection_status_template  =  "Lost connection...";
-const char *session_abort_template           =  "Session aborted: psoc not answering...";
+const char *session_abort_template           =  "Session aborted: psoc not responding...";
 
 
 /*********************************************************
@@ -61,17 +61,14 @@ const char *session_abort_template           =  "Session aborted: psoc not answe
 */
 static void init_terminal()
 {
-    if(WINDOWS_EN)
-    {
-        hide_cursor(1);
-        system("MODE con cols=87 lines=19");
-    }
-    else
-    {
-        set_nonblock(1);
-        hide_cursor(1);
-        system("echo -ne '\e[8;19;87t'");
-    }
+#if WINDOWS_EN
+    hide_cursor(1);
+    system("MODE con cols=87 lines=19");
+#else
+    set_nonblock(1);
+    hide_cursor(1);
+    system("echo -ne '\e[8;19;87t'");
+#endif
     clrscr();
 }
 //**************************************************************************************
@@ -82,19 +79,16 @@ static void init_terminal()
 */
 static void reset_terminal()
 {
-    if(WINDOWS_EN)
-    {
-        //system("MODE con cols=80 lines=22");
-        system("MODE con cols=120 lines=30");
-        hide_cursor(0);
-    }
-    else
-    {
-        set_nonblock(0);
-        hide_cursor(0);
-        system("echo -ne '\e[8;24;80t'");
+#if WINDOWS_EN
+    //system("MODE con cols=80 lines=22");
+    system("MODE con cols=120 lines=30");
+    hide_cursor(0);
+#else
+    set_nonblock(0);
+    hide_cursor(0);
+    system("echo -ne '\e[8;24;80t'");
+#endif
 
-    }
     clrscr();
 }
 //**************************************************************************************
@@ -661,10 +655,10 @@ int manage_monitor_menu(serial_port_t *psoc_port, serial_port_t *monitor_port)
             memcpy(input_layer + STATUS_PROMPT_OFFSET , status_prompt, temp);
         }
 
-        // Number of received buffers info
+        // Number of received buffers(errors count) info
         sprintf(info_buffer, "%d",  monitoring_info.session.buffer_cnt);
         temp = strlen(info_buffer);
-        memcpy(input_layer + TERM_N_COL*11 + 53 , info_buffer, temp);
+        memcpy(input_layer + TERM_N_COL*11 + 57 , info_buffer, temp);
 
         // Number of total resets info
         sprintf(info_buffer, "%d",  monitoring_info.session.rst_cnt);
