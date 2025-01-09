@@ -1,35 +1,59 @@
+/*******************************************************************************
+* @filename: menu.h
+* @brief: menu.c header
+*
+* MIT License
+*
+* Copyright (c) 2024 eduardofabbris
+* See the LICENSE file for details.
+********************************************************************************/
 #pragma once
 
+/**********************************************
+* Includes
+**********************************************/
 
 #include "util.h"
-#include "fileManagement.h"
-#include "serial.h"
-#include "graph.h"
 
+/**********************************************
+* Defines
+**********************************************/
+
+#define TERM_N_COL 85       // Terminal number of columns
+#define TERM_N_ROW 18       // Terminal number of rows
+
+#define ARROW_COL_OFFSET 28
+#define ARROW_ROW_OFFSET 10
+#define MENU_N_OPTIONS 2
+
+// Main menu constants
+#define PSOC_PROMPT_ROW_OFFSET      11
+#define PSOC_PROMPT_COL_OFFSET      18
+#define PSOC_PROMPT_OFFSET          TERM_N_COL*PSOC_PROMPT_ROW_OFFSET + PSOC_PROMPT_COL_OFFSET
+#define MONITOR_PROMPT_ROW_OFFSET   12
+#define MONITOR_PROMPT_COL_OFFSET   29
+#define MONITOR_PROMPT_OFFSET       TERM_N_COL*MONITOR_PROMPT_ROW_OFFSET + MONITOR_PROMPT_COL_OFFSET
+#define LOG_PROMPT_ROW_OFFSET       13
+#define LOG_PROMPT_COL_OFFSET       26
+#define LOG_PROMPT_OFFSET           TERM_N_COL*LOG_PROMPT_ROW_OFFSET + LOG_PROMPT_COL_OFFSET
+
+// Monitor menu constants
+#define STATUS_PROMPT_OFFSET        TERM_N_COL*(TERM_N_ROW - 2) + 3
+#define SPINNER_ANIMATION_LEN       4
+
+
+#define CANVAS_COLUMNS 80
+#define CANVAS_ROWS 21
 
 #define MENU_START_COLUMN 3
 #define MAIN_MENU_NUMBER_OF_OPTIONS 4
-#define CANVAS_COLUMNS 80
-#define CANVAS_ROWS 21
 #define ARROW_MENU_COLUMNS 2
 
+/**********************************************
+* Function Prototypes
+**********************************************/
 
+void update_screen(const char *background, char *input_layer);
+int get_menu_option(char *input_layer);
+int get_keyboard_str(char *input_layer, char *str_buffer, int max_str_len);
 
-
-enum menuWarnings{lostConnection = 1, noDataInBuffer, noGNUPlot, connectBothDevices};
-enum menuOptions{CONNECT_SERIAL=1, BEGIN, PLOT_GRAPH, EXIT};
-
-//symbol
-    enum symbolType{ symbArrow, 
-                    symbX };
-
-
-void printBackground(const char *background[], int rows, int startRow, int startCol);
-int  symbolMenuMovement(int initialX, int initialY, int upperLimitX, int bottomLimitX, int leap, enum symbolType symbol, BOOL blocking);
-void printSymbolMenu(BOOL clean, int x, int y, enum symbolType symbol);
-void mainMenu(BUFFER_DATA* bufferPSoc, SERIAL_PORT* mainDevice, SERIAL_PORT* monitorDevice);
-BOOL exitRunPrompt();
-void connectSerialPortMenu(SERIAL_PORT* mainDevice, SERIAL_PORT* monitorDevice);
-void updatePortStatus(SERIAL_PORT device, uint8_t device_type);
-
-void updateRunInfo(MONITORING_INFO monitoring_info, BOOL printAll);

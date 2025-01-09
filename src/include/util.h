@@ -1,97 +1,127 @@
+/*******************************************************************************
+* @filename: util.h
+* @brief: util.c header
+
+* MIT License
+*
+* Copyright (c) 2024 eduardofabbris
+* See the LICENSE file for details.
+********************************************************************************/
 #ifndef UTIL_H
 #define UTIL_H
+
+/**********************************************
+ * Includes
+ *********************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
 #include <string.h>
 #include <time.h>
-#include <pthread.h>
 
-#define MAX_BUFFER_SIZE 100
+/**********************************************
+ * Defines
+ *********************************************/
 
-//Keys
-#define SPACE 32 //32 = space in ascii
-#define ESC 27 //27 = esc in ascci
+// Special ASCII keys
+#define SPACE 32
+#define ESC 27
+
+/**********************************************
+ * Function Prototypes
+ *********************************************/
+
+// Time
+long long get_clock();
+double time_diff(uint64_t start_t);
+char *get_timeinfo(time_t timestamp);
+
+// Terminal
+void gotoxy(int x, int y);
+void hide_cursor(int state);
+
+char get_char();
 
 #ifdef _WIN32
+// @windows
 
-#define UP 72 //72 = H in ascci = arrow up
-#define DOWN 80 //80 = P in ascci = arrow down
-#define ENTER 13 //13 = return in ASCII 
-#define BACKSPACE 8
-#define WINDOWS_OS 1
+/**********************************************
+ * WINDOWS Includes
+ *********************************************/
 
-#else
-
-#define UP 65
-#define DOWN 66
-#define ENTER 10 //return 
-#define BACKSPACE 127 //delete
-#define WINDOWS_OS 0
-
-#endif
-
-
-
-//https://www.youtube.com/watch?v=mYBr-Yb70Z4
-//https://stackoverflow.com/questions/3521209/making-c-code-plot-a-graph-automatically
-
-//-------------- WINDOWS --------------
-#ifdef _WIN32
 #include <windows.h>
 #include <conio.h>
-//#define _sleep(a) Sleep(a) //ms
+
+/**********************************************
+ * WINDOWS Defines
+ *********************************************/
+
+// Miscellaneous
+#define FILE_SEPARATOR "\\\\"
+#define msleep(a) Sleep(a)
 #define clrscr() system("cls")
 #define clrbuf() fflush(stdin)
-#define refresh()
-#define timeDiff(a) _timeDiff(a)
-
 #define close_serial_port(a) CloseHandle(a)
+//#define _NULL NULL
 
-#define FILE_SEPARATOR "\\\\"
-#define _NULL NULL
+// ASCII keys
+#define UP 72
+#define DOWN 80
+#define ENTER 13
+#define BACKSPACE 8
 
-//--------------- LINUX ---------------
+// Flags
+#define LINUX_EN 0      // Linux enabled flag
+#define WINDOWS_EN 1    // Windows enabled flag
+
 #else
-#include <stdio_ext.h>
-#include <ncurses.h>
+// @linux
 
-#include <fcntl.h> // Contains file controls like O_RDWR
-#include <errno.h> // Error integer and strerror() function
-#include <termios.h> // Contains POSIX terminal control definitions
-#include <unistd.h> // write(), read(), close()
-#include <sys/file.h>
+/**********************************************
+ * LINUX Includes
+ *********************************************/
 
+#include <unistd.h>
+#include <termios.h>
+#include <sys/select.h>
 
-#define _popen(a,b) popen(a,b)
-#define _pclose(a) pclose(a)
+/**********************************************
+ * LINUX Defines
+ *********************************************/
+
+// Miscellaneous
+#define INVALID_HANDLE_VALUE -1
+#define FILE_SEPARATOR "/"
+#define msleep(a) for(int ii = 0; ii < 1000; ii++) {usleep(a);}
 #define close_serial_port(a) close(a)
+#define clrscr() system("clear")
+#define clrbuf() __fpurge(stdin)
 
+// ASCII keys
+#define UP 65
+#define DOWN 66
+#define ENTER 10
+#define BACKSPACE 127
+
+// Flags
+#define LINUX_EN 1      // Linux enabled flag
+#define WINDOWS_EN 0    // Windows enabled flag
+
+/**********************************************
+ * LINUX Typedefs
+ *********************************************/
 
 typedef uint8_t BOOL;
 typedef int HANDLE;
-#define Sleep(a) for(int ii = 0; ii < 1000; ii++) {usleep(a);} //ms
-#define clrscr() wclear(stdscr) //printf("\e[1;1H\e[2J")
-#define clrbuf() __fpurge(stdin)
-#define timeDiff(a) _timeDiff(a)/1000
-#define FILE_SEPARATOR "/"
 
+/**********************************************
+ * LINUX Function Prototypes
+ *********************************************/
 
-#define _NULL 0
-int kbhit(void);
+int kbhit();
+void set_nonblock(int state);
 
 #endif
 
-//-------------------------------------
-
-
-double _timeDiff(clock_t startTime);
-char* getCurrentTimeAndDate();
-void gotoxy (int y, int x);
-void showCursor(BOOL condition);
-void printPrompt(char* message, int x, int y);
-void _printf(const char *format, ...);
-void clear_write(int clear_size, int x, int y);
-
-#endif
+#endif // UTIL_H

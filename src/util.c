@@ -1,123 +1,215 @@
+/*******************************************************************************
+* @filename: util.c
+* @brief: Miscellaneous functions for PSoc Monitor
+*
+* MIT License
+*
+* Copyright (c) 2024 eduardofabbris
+* See the LICENSE file for details.
+********************************************************************************/
 #include "include/util.h"
-#include <stdarg.h>
 
-// return the time elapsed in ms since startTime
-double _timeDiff(clock_t startTime)
+/**
+ * @brief  Computes the time difference
+ * @param  start_t: initial time in microseconds
+ * @retval The time elapsed in milliseconds since start_time
+ * @note   clock() doesn't measure wall-clock time, i.e. can't be used with msleep in linux
+ */
+double time_diff(uint64_t start_t)
 {
-	return difftime(clock(), startTime);
+    return ((double) (get_clock() - start_t)) / 1000;
 }
 //**************************************************************************************
 
-// source: https://www.w3resource.com/c-programming/time/c-asctime.php
-char *getCurrentTimeAndDate()
+/**
+ * @brief  Get time and date information
+ * @param  None
+ * @retval The system date and time as a string pointer
+ * @note   Source code: https://www.w3resource.com/c-programming/time/c-asctime.php
+ */
+char *get_timeinfo(time_t timestamp)
 {
-	static struct tm *new_time;
-	time_t lctime;
+    static struct tm *new_time;
+    time_t lctime = timestamp;
 
-	// Get the time in seconds
-	time(&lctime);
+    // Get the timestamp in seconds
+    if (timestamp == 0)
+    {
+        time(&lctime);
+    }
 
-	// Convert it to the structure tm
-	new_time = localtime(&lctime);
+    // Convert it to the structure tm
+    new_time = localtime(&lctime);
 
-	return asctime(new_time);
+    return asctime(new_time);
 }
 //**************************************************************************************
 
-#ifdef _WIN32
-void gotoxy(int y, int x)
-{ 
-	COORD coord = {0, 0}; // position cursor
-	coord.X = x;
-	coord.Y = y;
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-}
-//****************************************************************************************
+#ifdef _WIN32 // @windows
 
-void showCursor(BOOL condition)
-{ // hide or show cursor
-	if (condition == FALSE)
-	{
-		CONSOLE_CURSOR_INFO cursor = {1, FALSE};
-		SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursor);
-	}
-	else
-	{
-		CONSOLE_CURSOR_INFO cursor = {1, TRUE};
-		SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursor);
-	}
-}
-//****************************************************************************************
-
-#else // linux -> uses ncurses
-
-void gotoxy(int y, int x)
+/**
+ * @brief  Get time in microseconds
+ * @retval The wall-clock time in microseconds
+ */
+long long get_clock()
 {
-	move(y, x);
-}
-//****************************************************************************************
+    //The epoch used by FILETIME starts from January 1, 1601
+    FILETIME ft;
+    ULARGE_INTEGER ui;
 
-void showCursor(BOOL condition)
+    // Get the current system time as a FILETIME
+    GetSystemTimeAsFileTime(&ft);
+
+    // Convert FILETIME to ULARGE_INTEGER
+    ui.LowPart = ft.dwLowDateTime;
+    ui.HighPart = ft.dwHighDateTime;
+
+    // Convert to microseconds (1 tick = 100 nanoseconds)
+    return  (long long) (ui.QuadPart / 10);
+}
+//**************************************************************************************
+
+/**
+ * @brief  Move terminal cursor
+ * @param  x: row number
+ * @param  y: column number
+ */
+void gotoxy(int x, int y)
 {
-	if (condition)
-		curs_set(1); // show
-	else
-		curs_set(0); // hide
+    COORD coord = {0, 0};
+    coord.X = y;
+    coord.Y = x;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 //****************************************************************************************
 
-int kbhit(void)
+/**
+ * @brief  Hide terminal cursor
+ * @param  State: disable or enable
+ */
+void hide_cursor(int state)
 {
-	int ch = getch();
-
-	if (ch != ERR)
-	{
-		ungetch(ch);
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
+    CONSOLE_CURSOR_INFO cursor = {1, !state};
+    SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursor);
 }
 //****************************************************************************************
 
+/**
+ * @brief  Read a pressed key from keyboard
+ * @retval The key pressed
+ */
+char get_char()
+{
+    return getch();
+}
+//****************************************************************************************
+#else // @linux
+
+/**
+ * @brief  Read a pressed key from keyboard
+ * @retval The key pressed
+ */
+char get_char()
+{
+    char ch = 0;
+    // read last character in case ANSI escape sequences
+    while(read(STDIN_FILENO, &ch, 1) > 0);
+    return ch;
+}
+//**************************************************************************************
+
+/**
+ * @brief  Get time in microseconds
+ * @retval The wall-clock time in microseconds
+ */
+long long get_clock()
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return (long long) ((ts.tv_sec * 1000000LL) + (ts.tv_nsec / 1000));
+}
+//**************************************************************************************
+
+/**
+ * @brief  Move terminal cursor
+ * @param  x: row number
+ * @param  y: column number
+ */
+void gotoxy(int x, int y)
+{
+    printf("\033[%d;%dH",x+1, y+1);
+}
+//****************************************************************************************
+
+/**
+ * @brief  Hide terminal cursor
+ * @param  State: disable or enable
+ */
+void hide_cursor(int state)
+{
+    if (state)
+    {
+        printf("\e[?25l");
+    }
+    else
+    {
+        printf("\e[?25h");
+    }
+
+}
+//****************************************************************************************
+
+/**
+ * @brief  Verify keyboard input
+ * @param  None
+ * @retval True if a key was pressed or false otherwise
+ */
+int kbhit()
+{
+    struct timeval tv;
+    fd_set fds;
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
+    select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
+    return FD_ISSET(STDIN_FILENO, &fds);
+}
+//****************************************************************************************
+
+/**
+ * @brief  Set non-blocking terminal input and disable echo mode
+ * @param  state: enable or disable
+ * @retval The system date and time as a string pointer
+ * @note   Canonical mode: waits until ENTER is pressed to take input
+ *         Echo mode     : prints all typed input
+ */
+void set_nonblock(int state)
+{
+    struct termios ttystate;
+
+    // get the terminal state
+    tcgetattr(STDIN_FILENO, &ttystate);
+
+    if (state)
+    {
+        // turn off canonical and echo mode
+        ttystate.c_lflag &= ~(ICANON | ECHO);
+    }
+    else
+    {
+        // turn on canonical and echo mode
+        ttystate.c_lflag |= (ICANON | ECHO);
+    }
+
+    // minimum of number input read.
+    ttystate.c_cc[VMIN] = 0;
+    // timeout in deciseconds
+    ttystate.c_cc[VTIME] = 0;
+
+    // set the terminal attributes.
+    tcsetattr(STDIN_FILENO, TCSANOW, &ttystate);
+
+}
+//****************************************************************************************
 #endif
-
-void printPrompt(char *message, int x, int y)
-{
-	gotoxy(x, y);
-	_printf("%s", message);
-	refresh();
-	clrbuf();
-}
-//****************************************************************************************
-
-void clear_write(int clear_size, int x, int y)
-{
-	gotoxy(x, y);
-	for(int i = 0; i < clear_size; i++) _printf(" ");
-	refresh();
-	gotoxy(x, y);
-}
-//****************************************************************************************
-
-void _printf(const char *format, ...)
-{
-
-	va_list args; // points to each unnamed arg in turn
-	char buffer[BUFSIZ];
-
-	va_start(args, format); // make ap point to 1st unnamed arg
-
-	vsnprintf(buffer, sizeof buffer, format, args);
-
-#ifdef _WIN32
-	printf("%s", buffer);
-#else
-	printw("%s", buffer); // uses ncurses lib
-	refresh();
-#endif
-
-	va_end(args);
-}
