@@ -36,6 +36,8 @@ class BufferData:
         self.dac_out = []
         self.error_x = []
         self.error_y = []
+        self.adc_sr  = []
+        self.dx      = []
 
 ####################################################################
 #
@@ -46,6 +48,9 @@ class LogProcessor:
     def __init__(self, file_name):
         self.file_name = file_name
         self.buffer_data = BufferData()
+        self.en_sr : bool = False
+        self.en_dx : bool = False
+        self.plot_file_name : str = 'last_plot.png'
         print(f'buffers in file: {self.get_buffer_num()}')
 
     def help(self): help(self)
@@ -132,9 +137,12 @@ class LogProcessor:
                     buffer_data.dac_out.append(int(column[1]))
                     total_time += int(column[2])
                     error_des |= int(column[3])
+                    buffer_data.dx +=  [abs(buffer_data.adc_in[i] - buffer_data.dac_out[i])]
                     if int(column[3]):
                         buffer_data.error_x.append(i)
                         buffer_data.error_y.append(int(column[0]))
+                    if i > 0 :
+                        buffer_data.adc_sr += [ abs(buffer_data.adc_in[i]  - buffer_data.adc_in[i-1]) ]
                 except ValueError:
                     continue
 
@@ -155,10 +163,9 @@ class LogProcessor:
     # @param  xtick     : Spacing for the x axis ticks
     # @param  ylim      : Limits for the y axis
     # @param  ytick     : Spacing for the y axis ticks
-    # @param  file_name : File name for png save
     # @return None
     #
-    def plot_buffer(self, xlim = [0, 1000], xtick : int = 100, ylim = [0, 4500], ytick : int = 500, file_name : str = 'last_plot.png'):
+    def plot_buffer(self, xlim = [0, 1000], xtick : int = 100, ylim = [0, 4500], ytick : int = 500):
         """Plots the data on a graph."""
         plot_buffer = self.buffer_data
         axis_font = {'fontsize': 12, 'fontname':'Arial'}
@@ -168,6 +175,8 @@ class LogProcessor:
         ax.plot(plot_buffer.dac_out, marker='o', linestyle=' ', color='g', markersize=3, label='DAC output')
         ax.plot(plot_buffer.adc_in, marker='o', linestyle='-', color='b', markersize=3, linewidth=1.5, label='ADC input')
         ax.plot(plot_buffer.error_x, plot_buffer.error_y, marker='o', linestyle=' ', color='r', markersize=3, linewidth=1.5, label='Fault')
+        if self.en_dx : ax.plot(plot_buffer.dx , marker='o', linestyle='-', color='magenta', markersize=3, linewidth=1.5, label='dx')
+        if self.en_sr : ax.plot(plot_buffer.adc_sr , marker='o', linestyle='-', color='orange', markersize=3, linewidth=1.5, label='adc sr')
 
         # Labels
         ax.set_title(' ', fontdict=title_font)
@@ -184,6 +193,6 @@ class LogProcessor:
         ax.yaxis.set_major_locator(MultipleLocator(ytick))
 
         plt.grid(True, which='both', linestyle='--')
-        fig.savefig(file_name, dpi=400)
+        fig.savefig(self.plot_file_name, dpi=400)
         plt.show()
 
