@@ -2,7 +2,7 @@
 
 This repository is part of my Graduation Project in Electrical Engineering, entitled ["Radiation Fault Detection System for SEE in a Mixed-signal Programmable SOC"](doc/graduation_thesis.pdf).
 
-The monitoring software, responsible for the automation of tests by managing the system devices, is entirely developed in C using an ASCII interface to interact with the user. This way, it is simple enough to be executed in any computer running a Windows or Linux OS.
+The monitoring software, responsible for the automation of tests by managing the system devices, is entirely developed in C using an ASCII interface to interact with the user. This way, it is simple enough to be executed on any computer running either a Windows or Linux OS.
 
 **Figure 1. Initial menu**
 

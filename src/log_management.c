@@ -345,7 +345,7 @@ void status_checker(char *device_id, serial_port_t *device_port, log_info_t *log
 //**************************************************************************************
 
 /**
-* @brief  Append session summary information to active file
+* @brief  Main Device reset controller
 * @param  rst_req_dsc  : reset request descritor(
 *                        bit0 -> 1 when serial connection request,
 *                        bit7 -> 1 when core hang request)
