@@ -1,12 +1,24 @@
-# PSoC 6 Monitor
+# PSoC 6 Monitor (Monitoring Software)
 
 This repository is part of my Graduation Project in Electrical Engineering, entitled ["Radiation Fault Detection System for SEE in a Mixed-signal Programmable SOC"](doc/graduation_thesis.pdf).
 
-The monitoring software, responsible for the automation of tests by managing both devices, is developed entirely in C using an ASCII interface to interact with its user. This way, it is simple enough to be executed in any computer running a Windows or Linux OS.
+The monitoring software, responsible for the automation of tests by managing the system devices, is entirely developed in C using an ASCII interface to interact with the user. This way, it is simple enough to be executed in any computer running a Windows or Linux OS.
 
 **Figure 1. Initial menu**
 
 ![Initial Menu](doc/imgs/initial_menu.png)
+
+## Compilation
+
+### Linux:
+
+```bash
+make
+```
+
+### Windows:
+
+Using MinGW, execute "windows\_build.bat"
 
 ## Monitoring System
 
@@ -27,7 +39,8 @@ A fully description of how the system works starts at page 47.
 
 ## System repositories
 
-* [Main device (PSoC 6)](https://github.com/eduardofabbris/error_detection)
+* [Main device (DUT)](https://github.com/eduardofabbris/error_detection)
 
 * [External Watchdog](https://github.com/eduardofabbris/external_watchdog)
 
+* [Monitoring Software](https://github.com/eduardofabbris/psoc_monitor)
