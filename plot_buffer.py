@@ -51,7 +51,8 @@ class LogProcessor:
         self.en_sr : bool = False
         self.en_dx : bool = False
         self.plot_file_name : str = 'last_plot.png'
-        print(f'buffers in file: {self.get_buffer_num()}')
+        self.buffer_num = self.get_buffer_num()
+        print(f'buffers in file: {self.buffer_num}')
 
     def help(self): help(self)
 
@@ -85,16 +86,140 @@ class LogProcessor:
         return buffer_cnt
 
     ##
-    # @brief  Loads new buffer from file
-    # @param  index : Buffer index
-    # @return False if failure
+    # @brief  Extract session summary info
+    # @return False if failure or summary info
     #
-    def load_new_buffer(self, index : int = 0):
+    def get_summary(self):
         start_found = False
-        buffer_id = '@B' + str(index)
-        buffer      = []
         line_count  = 0
         skip_cnt    = 0
+        raw_summary = []
+        summary     = []
+
+        # Open the file
+        with open(self.file_name, 'r') as file:
+            lines = file.readlines()
+
+        # Find log summary
+        for i, line in enumerate(lines):
+            if line.startswith('* @Session summary:'):
+                start_found = True
+
+            if start_found:
+                # Skip first lines
+                if skip_cnt < 2:
+                    skip_cnt += 1
+                else:
+                    line_count += 1
+                    if line_count > 8:
+                        break
+                    raw_summary.append(line.strip())
+
+        # Error
+        if not start_found: return False
+
+        # Extract info
+        for line in raw_summary:
+            aux = line.split(':')
+            size = len(aux)
+
+            if size == 2:
+                aux = aux[1]
+                summary.append(aux.split('*')[0].strip())
+            else:
+                aux = aux[1:]
+                summary.append(aux[0].split('(')[0].strip())
+                summary.append(aux[1].split(',')[0].strip())
+                summary.append(aux[2].split(')')[0].strip())
+
+        return {
+                'start_time'              : int( summary[0] ),
+                'end_time'                : int( summary[1] ),
+                'elapsed_min'             : float( summary[2] ),
+                'rec_buffers'             : int( summary[3] ),
+                'rec_pckts'               : int( summary[4] ),
+                'total_rsts'              : int( summary[5] ),
+                'core_rsts'               : int( summary[6] ),
+                'serial_rsts'             : int( summary[7] ),
+                'checksum_error'          : int( summary[8] ),
+                'monitor_connection_lost' : False if summary[9] == 'false' else True,
+            }
+
+    ##
+    # @brief  Extract log file header
+    # @return Header info
+    #
+    def get_header(self):
+        start_found = False
+        line_count  = 0
+        raw_header  = []
+
+        # Open the file
+        with open(self.file_name, 'r') as file:
+            lines = file.readlines()
+
+        # Find log summary
+        for i, line in enumerate(lines):
+            if line.startswith('* @filename:'):
+                start_found = True
+
+            if start_found:
+                line_count += 1
+                if line_count > 4:
+                    break
+                raw_header.append(line.strip())
+
+        # Error
+        if not start_found: return False
+
+        file_name = raw_header[0].split(':')[1]
+        file_name = file_name.split('*')[0].strip()
+        aux = file_name.split('_')
+        file_date = aux[1].strip()
+        file_index = aux[2].split('.')[0].strip()
+
+        user_info = raw_header[3].split(':')[1]
+        user_info = user_info.split('*')[0].strip()
+        return {
+                'file_name'      : file_name,
+                'file_timestamp' : file_date,
+                'file_index'     : file_index,
+                'user_info'      : user_info
+            }
+
+    ##
+    # @brief  Get log timeline
+    # @return Log events timeline
+    #
+    def get_timeline(self):
+        log_timeline = []
+
+        # Open the file
+        with open(self.file_name, 'r') as file:
+            lines = file.readlines()
+
+        # Check for lines starting with @
+        for i, line in enumerate(lines):
+            if line.startswith('@'):
+                aux = line.strip()[1:]
+                aux = aux.split(',')[0]
+                log_timeline.append(aux)
+        return log_timeline
+
+    ##
+    # @brief  Loads new buffer from file
+    # @param  index        : Buffer index
+    # @param  print_report : Print to console buffer report
+    # @return False if failure or buffer report if print is disabled
+    #
+    def load_new_buffer(self, index : int = 0, print_report : bool = True):
+        start_found   = False
+        buffer_id     = '@B' + str(index)
+        error_index   = []
+        buffer        = []
+        header        = []
+        line_count    = 0
+        skip_cnt      = 0
 
         # Open the file
         with open(self.file_name, 'r') as file:
@@ -111,6 +236,7 @@ class LogProcessor:
                 # Skip header
                 if skip_cnt < 2:
                     skip_cnt += 1
+                    header.append(line.strip())
                 else:
                     line_count += 1
                     if line_count > 1000:
@@ -127,6 +253,25 @@ class LogProcessor:
         total_time = 0
         error_des = 0
 
+        # Get device timestamp
+        device_timestamp = header[0].split(',')[1]
+        device_timestamp = int( device_timestamp.split('-')[0].strip() )
+
+        # Get session timestamp
+        session_timestamp = header[0].split('(')[1]
+        session_timestamp = int( session_timestamp.split(')')[0].strip() )
+
+        header = header[1].split(',')
+
+        # Get received packets
+        rec_pckts = int( header[0].split(':')[1].strip() )
+
+        # Get checksum error
+        checksum_error = False if header[1].split(':')[1].strip() == 'false' else True
+
+        # Get timeout error
+        timeout_error = False if header[2].split(':')[1].strip() == 'false' else True
+
         # Parse buffer lines
         for i, line in enumerate(buffer):
             # Split by spaces or tabs
@@ -136,6 +281,7 @@ class LogProcessor:
                     buffer_data.adc_in.append(int(column[0]))
                     buffer_data.dac_out.append(int(column[1]))
                     total_time += int(column[2])
+                    if int(column[3]): error_index += [i]
                     error_des |= int(column[3])
                     buffer_data.dx +=  [abs(buffer_data.adc_in[i] - buffer_data.dac_out[i])]
                     if int(column[3]):
@@ -146,16 +292,27 @@ class LogProcessor:
                 except ValueError:
                     continue
 
-        # Print buffer status
-        self.print_header('Status', index)
-        for i in range(0, len(ERROR_DES_MSGS)):
-            if (error_des >> 7 - i) & 1:
-                print(ERROR_DES_MSGS[i])
-
-        print(f'Total buffer time {total_time / 1e3} ms')
-
         # Load new data set
         self.buffer_data = buffer_data
+
+        # Print buffer status
+        if print_report:
+            self.print_header('Status', index)
+            for i in range(0, len(ERROR_DES_MSGS)):
+                if (error_des >> 7 - i) & 1:
+                    print(ERROR_DES_MSGS[i])
+            print(f'Total buffer time {total_time / 1e3} ms')
+        else:
+            return {
+                    'buffer_time'    : total_time,
+                    'device_time'    : device_timestamp,
+                    'session_time'   : session_timestamp,
+                    'descriptor'     : error_des,
+                    'smpl_index'     : error_index,
+                    'rec_pckts'      : rec_pckts,
+                    'checksum_error' : checksum_error,
+                    'timeout_error'  : timeout_error
+                }
 
     ##
     # @brief  Plot current loaded buffer
@@ -163,15 +320,16 @@ class LogProcessor:
     # @param  xtick     : Spacing for the x axis ticks
     # @param  ylim      : Limits for the y axis
     # @param  ytick     : Spacing for the y axis ticks
+    # @param  show_plot : Show generated plot
     # @return None
     #
-    def plot_buffer(self, xlim = [0, 1000], xtick : int = 100, ylim = [0, 4500], ytick : int = 500):
+    def plot_buffer(self, xlim = [0, 1000], xtick : int = 100, ylim = [0, 4500], ytick : int = 500, show_plot : bool = True):
         """Plots the data on a graph."""
         plot_buffer = self.buffer_data
         axis_font = {'fontsize': 12, 'fontname':'Arial'}
         title_font = {'fontsize': 12, 'fontweight': 'bold', 'fontname':'Arial'}
 
-        fig, ax = plt.subplots(figsize=(10, 5))
+        fig, ax = plt.subplots(figsize=(15, 5))
         ax.plot(plot_buffer.dac_out, marker='o', linestyle=' ', color='g', markersize=3, label='DAC output')
         ax.plot(plot_buffer.adc_in, marker='o', linestyle='-', color='b', markersize=3, linewidth=1.5, label='ADC input')
         ax.plot(plot_buffer.error_x, plot_buffer.error_y, marker='o', linestyle=' ', color='r', markersize=3, linewidth=1.5, label='Fault')
@@ -192,7 +350,10 @@ class LogProcessor:
         ax.xaxis.set_major_locator(MultipleLocator(xtick))
         ax.yaxis.set_major_locator(MultipleLocator(ytick))
 
+        # Save PNG image
         plt.grid(True, which='both', linestyle='--')
         fig.savefig(self.plot_file_name, dpi=400)
-        plt.show()
 
+        # Show plot
+        if show_plot:
+            plt.show()
