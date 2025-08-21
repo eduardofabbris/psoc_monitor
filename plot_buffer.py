@@ -188,6 +188,74 @@ class LogProcessor:
             }
 
     ##
+    # @brief  Extract reset info from file
+    # @return Reset info
+    #
+    def get_resets(self):
+        rst_info = []
+
+        # Open the file
+        with open(self.file_name, 'r') as file:
+            lines = file.readlines()
+
+        # Find reset ID
+        for i, line in enumerate(lines):
+            if line.startswith('@r'):
+                aux = line.strip()
+                timestamp = aux.split(')')[0]
+                timestamp = int( timestamp.split('(')[1].strip() )
+                attempt = aux.split(',')[0]
+                attempt = int( attempt.split('#')[1].strip() )
+                descriptor = int( aux.split(':')[1].strip() )
+                rst_info.append({'timestamp': timestamp, 'attempt': attempt, 'descriptor': descriptor})
+
+        return rst_info
+
+    ##
+    # @brief  Extract timeout info from file
+    # @return Timeout info
+    #
+    def get_timeouts(self):
+        timeout_info = []
+
+        # Open the file
+        with open(self.file_name, 'r') as file:
+            lines = file.readlines()
+
+        # Find timeout ID
+        for i, line in enumerate(lines):
+            if line.startswith('@t'):
+                aux = line.strip()
+                timestamp = aux.split(')')[0]
+                timestamp = int( timestamp.split('(')[1].strip() )
+                connected = True if aux.split('connection')[1].strip() == 'UP' else False
+                timeout_info.append({'timestamp': timestamp, 'connected': connected})
+
+        return timeout_info
+
+    ##
+    # @brief  Extract abort info from file
+    # @return Abort info
+    #
+    def get_abort(self):
+        abort_info = None
+
+        # Open the file
+        with open(self.file_name, 'r') as file:
+            lines = file.readlines()
+
+        # Find abort ID
+        for i, line in enumerate(lines):
+            if line.startswith('@a'):
+                aux = line.strip()
+                timestamp = aux.split(')')[0]
+                timestamp = int( timestamp.split('(')[1].strip() )
+                abort_info = {'timestamp': timestamp}
+                break
+
+        return abort_info
+
+    ##
     # @brief  Get log timeline
     # @return Log events timeline
     #
@@ -201,8 +269,11 @@ class LogProcessor:
         # Check for lines starting with @
         for i, line in enumerate(lines):
             if line.startswith('@'):
-                aux = line.strip()[1:]
-                aux = aux.split(',')[0]
+                aux = line.strip()
+                if aux[1] == 'B':
+                    aux = aux[1:].split(',')[0].strip()
+                else:
+                    aux = aux[1:].split('(')[0].strip()
                 log_timeline.append(aux)
         return log_timeline
 
