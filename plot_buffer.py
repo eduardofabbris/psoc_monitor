@@ -175,8 +175,8 @@ class LogProcessor:
         file_name = raw_header[0].split(':')[1]
         file_name = file_name.split('*')[0].strip()
         aux = file_name.split('_')
-        file_date = aux[1].strip()
-        file_index = aux[2].split('.')[0].strip()
+        file_date = int( aux[1].strip() )
+        file_index = int( aux[2].split('.')[0].strip() )
 
         user_info = raw_header[3].split(':')[1]
         user_info = user_info.split('*')[0].strip()
@@ -278,6 +278,17 @@ class LogProcessor:
         return log_timeline
 
     ##
+    # @brief  Get error messages
+    # @return Error message
+    #
+    def get_error_msgs(self, descriptor : int):
+        msgs = []
+        for i in range(0, len(ERROR_DES_MSGS)):
+            if (descriptor >> 7 - i) & 1:
+                msgs.append(ERROR_DES_MSGS[i])
+        return msgs
+
+    ##
     # @brief  Loads new buffer from file
     # @param  index        : Buffer index
     # @param  print_report : Print to console buffer report
@@ -369,9 +380,7 @@ class LogProcessor:
         # Print buffer status
         if print_report:
             self.print_header('Status', index)
-            for i in range(0, len(ERROR_DES_MSGS)):
-                if (error_des >> 7 - i) & 1:
-                    print(ERROR_DES_MSGS[i])
+            for i in self.get_error_msgs(error_des): print(ERROR_DES_MSGS[i])
             print(f'Total buffer time {total_time / 1e3} ms')
         else:
             return {
