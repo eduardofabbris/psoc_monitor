@@ -24,8 +24,12 @@ if not os.path.exists(log_path):
     os._exit(0)
 
 # Tex file
-output='latex/main.tex'
 lines = []
+log_name = log_path.split('.')[0].strip()
+report_path =f'latex/{log_name}/'
+os.makedirs(report_path, exist_ok=True)
+
+output = report_path + f'{log_name}.tex'
 if os.path.exists(output):
     print(".tex file already found!")
     if args.force:
@@ -36,24 +40,25 @@ if os.path.exists(output):
 
 # Plot images
 imgs_folder = 'imgs'
-imgs_path = 'latex/' + imgs_folder
+imgs_path = report_path + imgs_folder
 os.makedirs(imgs_path, exist_ok=True)
 
 # Log processor
 proc = LogProcessor(log_path)
 imgs_name = []
 
-
 ##########################
 # Extract info from LOG
 ##########################
 
+tot_monitoring_time = 0
 buffer_info = []
 file_buffer_num = proc.buffer_num
 
 for i in range(0, proc.buffer_num):
     print(f"-> buffer {i}")
     buffer_info.append(proc.load_new_buffer(i, False))
+    tot_monitoring_time += buffer_info[i]['device_time']
 
     buf = 'buffer-' + str(i) + '.png'
     imgs_name.append(buf)
@@ -82,7 +87,7 @@ abort_info = proc.get_abort()
 ###################
 lines.append("\\documentclass[12pt, a4paper]{article}")
 lines.append("\\usepackage[utf8]{inputenc}")
-lines.append("\\usepackage{formatting}")
+lines.append("\\usepackage{../formatting}")
 lines.append("")
 
 ###################
@@ -138,6 +143,7 @@ if summary_info:
 
     lines.append("")
     lines.append(f"\\item Sessao iniciada em {begin_date} e finalizada em {end_date}, resultando em um total de {info['elapsed_min']} minutos.")
+    lines.append(f"\\item Tempo total de monitoramento de {round(tot_monitoring_time*1e-3/60, 2)} minutos (resultando em buffers).")
     lines.append(f"\\item O PSoC6 for reiniciado um total de {info['total_rsts']} veze(s), sendo {info['core_rsts']} core reset(s) e {info['serial_rsts']} serial reset(s).")
     lines.append(f"\\item Foi recebido um total de {info['rec_buffers']} buffers.")
 
@@ -185,7 +191,7 @@ for event in timeline:
             lines.append("")
             lines.append(f"\\textbf{{Tempo de monitoramento:}} {round(info['device_time']*1e-3 / 60, 2)} minutos")
             lines.append("")
-            lines.append(f"\\textbf{{Tempo do buffer:}} {info['buffer_time']*1e-3} ms")
+            lines.append(f"\\textbf{{Tempo do buffer:}} {round(info['buffer_time']*1e-3, 3)} ms")
             lines.append("")
             if info['rec_pckts'] != 10 or info['checksum_error'] or info['timeout_error'] or PRINT_ALL:
                 lines.append("Erro no recebimento do buffer!")

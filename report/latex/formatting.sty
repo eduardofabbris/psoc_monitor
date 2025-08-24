@@ -1,0 +1,101 @@
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{caption, subcaption}
+\usepackage{float}
+\usepackage{array}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage{mdframed}
+\usepackage{ragged2e}
+\usepackage{url}
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\usepackage{enumitem}
+\usepackage{pdfpages}
+%---------------- EQUATIONS ----------------
+\usepackage{mathtools}
+\usepackage[thinc]{esdiff}
+
+\usepackage{environ}
+\NewEnviron{NORMAL}{%
+    \scalebox{1.5}{$\BODY$}
+}
+\renewcommand{\theequation}{\arabic{equation}}
+
+%---------------- FONT ----------------
+%Times new Roman
+%\usepackage{times} % just letter
+\usepackage{mathptmx} % letter + math text
+\usepackage{bm}
+%---------------- SPACING ----------------
+%showframe
+\usepackage[top=3.25cm, left=1.75cm, bottom=2.75cm, right=1.75cm]{geometry}
+\linespread{1.5}
+%---------------- INDENTATION ----------------
+\usepackage[none]{hyphenat}
+\sloppy
+\usepackage{indentfirst}
+\setlength{\parindent}{1.3cm}
+
+%----------------------------------------
+\renewcommand{\@seccntformat}[1]{\csname the#1\endcsname.~}
+
+%---------------- HEADER AND FOOTER ----------------
+\usepackage{fancyhdr}
+\usepackage{etoolbox}
+\patchcmd{\chapter}
+{\thispagestyle{plain}}{\thispagestyle{empty}}
+{}
+{}
+\patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
+
+
+\fancyhead{} % clear all header fields
+\fancyfoot{}
+
+\fancyhead[R]{\textbf{\thepage}\\}
+\renewcommand{\headrulewidth}{0pt}
+%---------------- FIGURES AND TABLES, CAPTION ----------------
+%#1, #2, and #3 that are replaced with the caption label, the separator, and the text
+\DeclareCaptionFormat{custom}
+{
+    \normalsize{#1#2#3}
+}
+\DeclareCaptionLabelSeparator{custom}{\bfseries \space -- \space}
+
+\renewcommand{\figurename}{\bfseries Figura}
+\renewcommand{\thefigure}{\arabic{figure}}
+\renewcommand{\tablename}{\bfseries Table}
+\renewcommand{\thetable}{\arabic{table}}
+
+\captionsetup
+{
+    format=custom,
+    labelsep=custom
+}
+\setlength{\tabcolsep}{18pt} %horizontal gap
+\renewcommand{\arraystretch}{0.9} %vertical space
+
+
+%---------------- REFERENCES AND LINKS ----------------
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue,
+    citecolor=black,
+    pdftitle=relatorioDeAtividadesIC
+}
+%----------------------------------------
+
+
+\newcommand{\hl}{\colorbox{yellow}}
+%----------------------------------------
+
+\usepackage[normalem]{ulem}
+\usetikzlibrary{shapes.geometric, arrows, shapes.symbols, shapes.multipart}
+
+\renewcommand*\contentsname{Conteúdo}
+\setcounter{tocdepth}{3}
