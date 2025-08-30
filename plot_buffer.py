@@ -380,7 +380,7 @@ class LogProcessor:
         # Print buffer status
         if print_report:
             self.print_header('Status', index)
-            for i in self.get_error_msgs(error_des): print(ERROR_DES_MSGS[i])
+            for err_msg in self.get_error_msgs(error_des): print(err_msg)
             print(f'Total buffer time {total_time / 1e3} ms')
         else:
             return {

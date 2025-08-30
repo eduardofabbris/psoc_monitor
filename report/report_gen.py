@@ -1,3 +1,19 @@
+###################################################################################
+#                                  Error Detection System
+###################################################################################
+"""
+@file       report_gen.py
+@author     Eduardo Fabbris
+@brief      Extract log info and generate basic report in latex (pt-br)
+"""
+####################################################################################
+#
+# MIT License
+#
+# Copyright (c) 2024 eduardofabbris
+# See the LICENSE file for details.
+#
+####################################################################################
 import datetime
 import os
 import sys
@@ -55,6 +71,7 @@ tot_monitoring_time = 0
 buffer_info = []
 file_buffer_num = proc.buffer_num
 
+# Generate plot imgs
 for i in range(0, proc.buffer_num):
     print(f"-> buffer {i}")
     buffer_info.append(proc.load_new_buffer(i, False))
