@@ -44,3 +44,32 @@ A fully description of how the system works starts at page 47.
 * [External Watchdog](https://github.com/eduardofabbris/external_watchdog)
 
 * [Monitoring Software](https://github.com/eduardofabbris/psoc_monitor)
+
+## How to plot a buffer with python
+
+Be sure to have all libraries needed(e.g. matplotlib) and initialize iterative python inside
+the repository, where plot_buffer.py file can be found.
+
+```bash
+python3
+```
+
+Load LogProcessor class.
+
+```bash
+>>> from plot_buffer import LogProcessor
+```
+
+```bash
+>>> c = LogProcessor('report/example_log.txt')
+```
+
+Load and plot new buffer.
+
+```bash
+>>> c.load_new_buffer(0)
+```
+
+```bash
+>>> c.plot_buffer()
+```
