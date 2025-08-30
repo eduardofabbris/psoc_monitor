@@ -1,3 +1,4 @@
+# @disclaimer: created with chatgpt
 #!/bin/bash
 
 # Copy Makeifle template to directories

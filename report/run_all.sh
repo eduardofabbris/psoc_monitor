@@ -1,3 +1,4 @@
+# @disclaimer: created with chatgpt
 #!/bin/bash
 
 # Loop through all .txt files in the current directory

@@ -37,7 +37,7 @@ A fully description of how the system works starts at page 47.
 
 ![Monitoring system Menu](doc/imgs/monitoring_system.png)
 
-## System repositories
+## System Repositories
 
 * [Main device (DUT)](https://github.com/eduardofabbris/error_detection)
 
@@ -45,9 +45,9 @@ A fully description of how the system works starts at page 47.
 
 * [Monitoring Software](https://github.com/eduardofabbris/psoc_monitor)
 
-## How to plot a buffer with python
+## How to Plot a Buffer Using Python
 
-Be sure to have all libraries needed(e.g. matplotlib) and initialize iterative python inside
+Be sure to have all libraries needed (e.g. matplotlib) and initialize interactive python inside
 the repository, where plot_buffer.py file can be found.
 
 ```bash
@@ -64,10 +64,10 @@ Load LogProcessor class.
 >>> c = LogProcessor('report/example_log.txt')
 ```
 
-Load and plot new buffer.
+Load and plot a new buffer.
 
 ```bash
->>> c.load_new_buffer(0)
+>>> c.load_new_buffer(2)
 ```
 
 ```bash
